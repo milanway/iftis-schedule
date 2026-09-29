@@ -1,0 +1,2163 @@
+<!-- Разработал и создал Токарев Михаил -->
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
+    <title>МПГУ ИФТИС — Расписание</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <style>
+        /* ============ ПЕРЕМЕННЫЕ ============ */
+        :root {
+            --bg: #f5f6f9;
+            --surface: #ffffff;
+            --surface-alt: #f4f6fa;
+            --text: #0a1e3d;
+            --text-muted: #8b93a7;
+            --accent: #0a1e3d;
+            --accent-2: #1a3a6a;
+            --gold: #e8c84a;
+            --gold-soft: #fdf6dd;
+            --border: #e8ecf3;
+            --radius: 16px;
+            --radius-sm: 10px;
+            --shadow: 0 2px 12px rgba(10, 30, 61, 0.05);
+            --shadow-hover: 0 6px 20px rgba(10, 30, 61, 0.1);
+            --transition: 0.25s ease;
+            --danger: #e74c3c;
+        }
+        body.dark {
+            --bg: #0a0a0f;
+            --surface: #141419;
+            --surface-alt: #1c1c24;
+            --text: #f5f5f7;
+            --text-muted: #7a7a85;
+            --accent: #e8c84a;
+            --accent-2: #f0d55c;
+            --gold: #e8c84a;
+            --gold-soft: #2a2410;
+            --border: #26262e;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.7);
+            --danger: #ff6b5b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { height: 100%; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 0 0 300px 0;
+            transition: background var(--transition), color var(--transition);
+            overflow-x: hidden;
+        }
+        .container { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+        /* ============ ШАПКА ============ */
+        .header {
+            background: var(--surface);
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border);
+            transition: background var(--transition), border-color var(--transition);
+        }
+        .header-top { display: flex; align-items: center; gap: 12px; }
+        .logo { width: 44px; height: 44px; flex-shrink: 0; object-fit: contain; }
+        .brand-divider { width: 1px; height: 32px; background: var(--border); }
+        .brand-text { flex: 1; min-width: 0; }
+        .brand-title { font-size: 16px; font-weight: 800; letter-spacing: 0.3px; color: var(--accent); }
+        .brand-sub { font-size: 13px; color: var(--gold); font-weight: 600; margin-top: 1px; }
+        .brand-sub .group-num { color: var(--gold); }
+        .brand-sub .group-label { color: var(--text-muted); font-weight: 400; }
+        .hamburger {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: transparent; border: none; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 5px; transition: background var(--transition);
+        }
+        .hamburger:active { background: var(--surface-alt); }
+        .hamburger span { display: block; width: 22px; height: 2px; background: var(--accent); border-radius: 2px; transition: var(--transition); }
+        .header-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 10px; }
+
+        /* ============ DROPDOWN ГРУПП ============ */
+        .dropdown {
+            display: none; position: absolute; top: 100px; right: 16px; left: 16px;
+            max-width: 400px; margin: 0 auto;
+            background: var(--surface); border-radius: var(--radius);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+            padding: 14px 12px; z-index: 100;
+            max-height: 70vh; overflow-y: auto;
+            animation: slideDown 0.25s ease;
+        }
+        body.dark .dropdown { box-shadow: 0 12px 40px rgba(0,0,0,0.6); }
+        .dropdown.open { display: block; }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .course-label { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 6px 6px; }
+        .group-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 6px; }
+        .group-grid button {
+            background: var(--surface-alt); border: none;
+            padding: 10px 8px; border-radius: var(--radius-sm);
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            color: var(--text); transition: all var(--transition);
+        }
+        .group-grid button:hover { background: var(--border); }
+        .group-grid button.active-group { background: var(--accent); color: #fff; }
+        body.dark .group-grid button.active-group { background: var(--gold); color: #0a1e3d; }
+
+        /* ============ КОНТЕНТ ============ */
+        .content { padding-top: 16px; }
+
+        .week-switch { display: flex; gap: 10px; margin-bottom: 14px; }
+        .segmented {
+            flex: 1; display: flex; background: var(--surface);
+            border-radius: 999px; padding: 4px;
+            border: 1px solid var(--border);
+            transition: background var(--transition), border-color var(--transition);
+        }
+        .segmented button {
+            flex: 1; border: none; background: transparent;
+            padding: 10px; border-radius: 999px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            color: var(--text-muted); transition: all var(--transition);
+        }
+        .segmented button.active { background: var(--accent); color: #fff; }
+        body.dark .segmented button.active { color: #0a1e3d; }
+        .auto-btn {
+            display: flex; align-items: center; gap: 6px;
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 999px; padding: 10px 16px;
+            font-size: 14px; font-weight: 600; cursor: pointer;
+            color: var(--accent); transition: all var(--transition);
+        }
+        .auto-btn img, .auto-btn svg { width: 16px; height: 16px; }
+        .auto-btn.active-auto { background: var(--accent); color: #fff; border-color: var(--accent); }
+        body.dark .auto-btn.active-auto { background: var(--gold); color: #0a1e3d; border-color: var(--gold); }
+        .auto-btn.active-auto img { filter: invert(1); }
+        body.dark .auto-btn.active-auto img { filter: none; }
+
+        .days-row {
+            display: flex; gap: 8px; margin-bottom: 20px;
+            overflow-x: auto; scrollbar-width: none; padding: 2px 0;
+        }
+        .days-row::-webkit-scrollbar { display: none; }
+        .day-btn {
+            flex-shrink: 0; width: 44px; height: 44px;
+            border-radius: 50%; border: 1px solid var(--border);
+            background: var(--surface); font-size: 13px; font-weight: 700;
+            cursor: pointer; color: var(--text);
+            transition: all var(--transition);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .day-btn:hover { border-color: var(--accent); }
+        .day-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+        body.dark .day-btn.active { background: var(--gold); color: #0a1e3d; border-color: var(--gold); }
+        .today-btn {
+            flex-shrink: 0; display: flex; align-items: center; gap: 8px;
+            padding: 0 16px; height: 44px; border-radius: 999px;
+            border: none; background: var(--gold); color: #0a1e3d;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: all var(--transition);
+        }
+        .today-btn:hover { transform: scale(1.03); }
+        .today-btn img, .today-btn svg { width: 18px; height: 18px; }
+
+        .subgroup-selector {
+            display: flex; gap: 8px; margin-bottom: 16px;
+            justify-content: center; flex-wrap: wrap;
+        }
+        .subgroup-selector.hidden { display: none; }
+        .subgroup-selector button {
+            padding: 8px 20px; border: 1.5px solid var(--accent);
+            background: transparent; border-radius: 999px;
+            cursor: pointer; font-weight: 600; font-size: 13px;
+            color: var(--accent); transition: all var(--transition);
+        }
+        .subgroup-selector button.active { background: var(--accent); color: #fff; }
+        body.dark .subgroup-selector button { border-color: var(--gold); color: var(--gold); }
+        body.dark .subgroup-selector button.active { background: var(--gold); color: #0a1e3d; }
+
+        .day-title {
+            font-size: 26px; font-weight: 800; color: var(--text);
+            margin-bottom: 18px; display: flex; align-items: center;
+            gap: 12px; flex-wrap: wrap;
+        }
+        .day-title .badge {
+            background: var(--accent); color: #fff;
+            font-size: 12px; padding: 5px 14px;
+            border-radius: 999px; font-weight: 600;
+        }
+        body.dark .day-title .badge { background: var(--gold); color: #0a1e3d; }
+
+        /* ============ КАРТОЧКИ ПАР ============ */
+        .pair-card {
+            background: var(--surface); border-radius: var(--radius);
+            padding: 16px 18px 16px 22px; margin-bottom: 12px;
+            position: relative; box-shadow: var(--shadow);
+            transition: all var(--transition);
+            animation: fadeIn 0.35s ease backwards;
+            border-left: 4px solid var(--accent);
+        }
+        body.dark .pair-card { border-left-color: var(--gold); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .pair-card:hover { box-shadow: var(--shadow-hover); }
+
+        .pair-card.type-lek { border-left-color: #1565c0; }
+        .pair-card.type-pz { border-left-color: #6a1b9a; }
+        .pair-card.type-laba { border-left-color: #e65100; }
+        .pair-card.type-lek-pz { border-left-color: #00838f; }
+        .pair-card.type-fizra { border-left-color: #2e7d32; }
+        .pair-card.empty { border-left-color: var(--border); background: var(--surface-alt); box-shadow: none; }
+        body.dark .pair-card.type-lek { border-left-color: #42a5f5; }
+        body.dark .pair-card.type-pz { border-left-color: #ab47bc; }
+        body.dark .pair-card.type-laba { border-left-color: #ff7043; }
+        body.dark .pair-card.type-lek-pz { border-left-color: #26c6da; }
+        body.dark .pair-card.type-fizra { border-left-color: #66bb6a; }
+
+        .pair-card.now { box-shadow: 0 0 0 2px var(--gold), var(--shadow-hover); }
+        body.dark .pair-card.now { box-shadow: 0 0 0 2px var(--gold), 0 0 20px rgba(232, 200, 74, 0.15), var(--shadow-hover); }
+        .now-badge {
+            position: absolute; top: -8px; right: 16px;
+            background: var(--gold); color: #0a1e3d;
+            font-size: 10px; font-weight: 800;
+            padding: 3px 10px; border-radius: 999px;
+            letter-spacing: 0.5px; text-transform: uppercase;
+        }
+
+        .pair-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .pair-head img, .pair-head svg { width: 22px; height: 22px; flex-shrink: 0; opacity: 0.85; }
+        body.dark .pair-head img, body.dark .pair-head svg { filter: invert(1); opacity: 0.9; }
+        .pair-head .time { font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--text); }
+        .pair-menu-btn {
+            margin-left: auto; background: transparent; border: none;
+            cursor: pointer; padding: 6px 4px; border-radius: 6px;
+            color: var(--text-muted); font-size: 20px; line-height: 1;
+            transition: background var(--transition);
+        }
+        .pair-menu-btn:hover { background: var(--surface-alt); }
+
+        .pair-subject { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 8px; line-height: 1.3; }
+        .pair-card.empty .pair-subject { color: var(--text-muted); font-weight: 500; }
+
+        .type-badge {
+            display: inline-block; font-size: 12px; font-weight: 600;
+            padding: 4px 12px; border-radius: 999px;
+            background: var(--gold-soft); color: #8a6d1a;
+            margin-bottom: 10px;
+        }
+        body.dark .type-badge { background: rgba(232, 200, 74, 0.12); color: var(--gold); border: 1px solid rgba(232, 200, 74, 0.2); }
+
+        .pair-meta { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+        .pair-meta-row { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-muted); }
+        .pair-meta-row img, .pair-meta-row svg { width: 16px; height: 16px; flex-shrink: 0; opacity: 0.7; }
+        body.dark .pair-meta-row img, body.dark .pair-meta-row svg { filter: invert(0.7); }
+        .pair-meta-row .room-pill {
+            background: var(--surface-alt); padding: 2px 12px;
+            border-radius: 999px; font-weight: 600; font-size: 13px;
+            color: var(--text);
+        }
+        body.dark .pair-meta-row .room-pill { background: var(--surface-alt); color: var(--text); border: 1px solid var(--border); }
+
+        .subj-dates { display: block; font-size: 12px; font-weight: 400; color: var(--text-muted); margin-top: 4px; }
+
+        .pair-actions {
+            display: none; gap: 8px; margin-top: 12px;
+            padding-top: 12px; border-top: 1px dashed var(--border);
+            flex-wrap: wrap;
+        }
+        .pair-actions.open { display: flex; }
+        .pair-actions button {
+            background: var(--surface-alt); border: none;
+            padding: 8px 14px; border-radius: 999px;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            color: var(--text); transition: all var(--transition);
+            display: flex; align-items: center; gap: 6px;
+        }
+        .pair-actions button:hover { background: var(--accent); color: #fff; }
+        body.dark .pair-actions button:hover { color: #0a1e3d; }
+
+        /* ============ НИЖНЯЯ НАВИГАЦИЯ (ПАРЯЩИЙ ОСТРОВОК) ============ */
+        .bottom-nav {
+            position: fixed;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            display: flex;
+            padding: 12px 10px;
+            z-index: 50;
+            box-shadow: 0 8px 32px rgba(10, 30, 61, 0.12);
+            transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+        }
+        body.dark .bottom-nav {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        .bottom-nav a, .bottom-nav button {
+            flex: 1;
+            background: transparent;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 10px 4px;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 600;
+            transition: color var(--transition), background var(--transition);
+            font-family: inherit;
+            border-radius: 32px;
+        }
+        .bottom-nav a:hover, .bottom-nav button:hover {
+            background: var(--surface-alt);
+        }
+        .bottom-nav img, .bottom-nav svg { width: 24px; height: 24px; opacity: 0.6; transition: opacity var(--transition); }
+        body.dark .bottom-nav img, body.dark .bottom-nav svg { filter: invert(1); opacity: 0.5; }
+        .bottom-nav a.active, .bottom-nav button.active {
+            color: var(--accent);
+            background: var(--surface-alt);
+        }
+        .bottom-nav a.active img, .bottom-nav button.active img { opacity: 1; }
+        body.dark .bottom-nav a.active, body.dark .bottom-nav button.active {
+            color: var(--gold);
+            background: var(--surface-alt);
+        }
+        body.dark .bottom-nav a.active img, body.dark .bottom-nav button.active img {
+            filter: invert(0.85) sepia(1) saturate(5) hue-rotate(5deg);
+            opacity: 1;
+        }
+
+        /* ============ КНОПКА НАВЕРХ ============ */
+        .scroll-top {
+            position: fixed; right: 16px; bottom: 100px;
+            width: 48px; height: 48px; border-radius: 50%;
+            background: var(--surface); border: 1px solid var(--border);
+            box-shadow: var(--shadow-hover); cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+            font-size: 20px; color: var(--accent); z-index: 40;
+            transition: all var(--transition);
+        }
+        .scroll-top.visible { display: flex; }
+        .scroll-top:hover { transform: translateY(-2px); }
+
+        /* ============ МОДАЛКА ============ */
+        .modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(10, 30, 61, 0.5);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 300; display: flex;
+            align-items: flex-end; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        body.dark .modal-overlay {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .modal {
+            background: var(--surface); width: 100%; max-width: 500px;
+            border-radius: 24px 24px 0 0;
+            padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh; overflow-y: auto;
+            border: 1px solid var(--border); border-bottom: none;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+
+        .modal-handle { width: 40px; height: 4px; background: var(--border); border-radius: 2px; margin: 0 auto 16px; }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .modal-header h2 { font-size: 22px; font-weight: 800; color: var(--text); }
+        .modal-close {
+            width: 36px; height: 36px; border-radius: 50%;
+            border: none; background: var(--surface-alt);
+            color: var(--text); font-size: 16px; cursor: pointer;
+            transition: background var(--transition);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .modal-close:hover { background: var(--border); }
+
+        .settings-section { margin-bottom: 24px; }
+        .settings-label {
+            font-size: 12px; font-weight: 700; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            margin-bottom: 10px; padding-left: 4px;
+        }
+
+        .theme-switch {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; background: var(--surface-alt);
+            padding: 6px; border-radius: 14px;
+        }
+        .theme-option {
+            background: transparent; border: none; border-radius: 10px;
+            padding: 12px 8px; cursor: pointer;
+            font-size: 12px; font-weight: 600;
+            color: var(--text-muted);
+            display: flex; flex-direction: column; align-items: center;
+            gap: 6px; transition: all var(--transition);
+            font-family: inherit;
+        }
+        .theme-option:hover { color: var(--text); }
+        .theme-option.active {
+            background: var(--surface); color: var(--accent);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        body.dark .theme-option.active { color: var(--gold); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+        .theme-icon { font-size: 20px; }
+
+        .settings-link {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px; background: var(--surface-alt);
+            border-radius: 14px; text-decoration: none;
+            color: inherit; margin-bottom: 8px;
+            transition: all var(--transition);
+        }
+        .settings-link:hover { background: var(--border); transform: translateX(3px); }
+        .support-link {
+            background: linear-gradient(135deg, #229ED9 0%, #1a7fb0 100%);
+            color: #fff;
+        }
+        .support-link:hover { background: linear-gradient(135deg, #1e8bc0 0%, #166d99 100%); }
+        .support-link .settings-link-title { color: #fff; }
+        .support-link .settings-link-sub { color: rgba(255,255,255,0.85); }
+        .support-link .settings-arrow { color: #fff; }
+
+        .settings-link-icon { font-size: 22px; flex-shrink: 0; width: 32px; text-align: center; }
+        .settings-link-icon-img {
+            width: 22px; height: 22px; flex-shrink: 0;
+            filter: brightness(0) invert(1);
+        }
+        .settings-link-text { flex: 1; min-width: 0; }
+        .settings-link-title { font-size: 15px; font-weight: 700; color: var(--text); }
+        .settings-link-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+        .settings-arrow { font-size: 18px; color: var(--text-muted); flex-shrink: 0; }
+
+        .admin-btn {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px;
+            background: linear-gradient(135deg, var(--accent) 0%, #1a3a6a 100%);
+            color: #fff; border: none; border-radius: 14px;
+            cursor: pointer; width: 100%; text-align: left;
+            transition: all var(--transition); font-family: inherit;
+            margin-top: 8px;
+        }
+        .admin-btn:hover { transform: translateX(3px); opacity: 0.95; }
+        .admin-btn .admin-icon { font-size: 22px; flex-shrink: 0; width: 32px; text-align: center; }
+        .admin-btn .admin-text { flex: 1; min-width: 0; }
+        .admin-btn .admin-title { font-size: 15px; font-weight: 700; color: #fff; }
+        .admin-btn .admin-sub { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 2px; }
+        body.dark .admin-btn {
+            background: linear-gradient(135deg, var(--gold) 0%, #b8941f 100%);
+            color: #0a1e3d;
+        }
+        body.dark .admin-btn .admin-title { color: #0a1e3d; }
+        body.dark .admin-btn .admin-sub { color: rgba(10,30,61,0.7); }
+
+        .creator-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px; background: var(--surface-alt);
+            border-radius: 14px; margin-bottom: 12px;
+        }
+        .creator-avatar {
+            width: 48px; height: 48px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent) 0%, #1a3a6a 100%);
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 16px; flex-shrink: 0;
+        }
+        body.dark .creator-avatar {
+            background: linear-gradient(135deg, var(--gold) 0%, #b8941f 100%);
+            color: #0a1e3d;
+        }
+        .creator-info { flex: 1; min-width: 0; }
+        .creator-name { font-size: 15px; font-weight: 700; color: var(--text); }
+        .creator-role { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        .settings-footer {
+            text-align: center; font-size: 12px;
+            color: var(--text-muted); line-height: 1.6;
+            padding: 12px 8px 0;
+        }
+        .settings-footer .heart { color: #e74c3c; }
+        .settings-footer .brand { color: var(--gold); font-weight: 700; }
+
+        /* ============ МОДАЛКА АДМИНА ============ */
+        .admin-modal-overlay {
+            position: fixed; inset: 0;
+            background: rgba(10, 30, 61, 0.6);
+            backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+            z-index: 400; display: flex;
+            align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+        body.dark .admin-modal-overlay { background: rgba(0, 0, 0, 0.8); }
+        .admin-modal-overlay.open { opacity: 1; pointer-events: auto; }
+        .admin-modal {
+            background: var(--surface); width: 100%; max-width: 420px;
+            border-radius: 24px;
+            padding: 20px 24px 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transform: translateY(20px) scale(0.98);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-height: 90vh; overflow-y: auto;
+        }
+        .admin-modal-overlay.open .admin-modal { transform: translateY(0) scale(1); }
+
+        .admin-modal-header {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 20px;
+        }
+        .admin-back-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--surface-alt); border: none;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; color: var(--text);
+            font-size: 20px; flex-shrink: 0;
+            transition: background var(--transition);
+        }
+        .admin-back-btn:hover { background: var(--border); }
+        .admin-modal-title { font-size: 20px; font-weight: 800; color: var(--text); }
+
+        .admin-field-label {
+            display: block; font-size: 13px; font-weight: 700;
+            color: var(--text-muted); margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .admin-input {
+            width: 100%; padding: 14px 18px;
+            border: 1.5px solid var(--border);
+            border-radius: 14px; font-size: 15px;
+            background: var(--surface-alt); color: var(--text);
+            outline: none; transition: all var(--transition);
+            font-family: inherit;
+        }
+        .admin-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(10, 30, 61, 0.08);
+        }
+        body.dark .admin-input:focus {
+            box-shadow: 0 0 0 3px rgba(232, 200, 74, 0.15);
+            border-color: var(--gold);
+        }
+        .admin-error {
+            color: var(--danger); font-size: 13px; font-weight: 600;
+            margin-top: 10px; min-height: 18px;
+            display: none;
+        }
+        .admin-error.show { display: block; }
+
+        .admin-submit {
+            width: 100%; padding: 14px;
+            background: var(--accent); color: #fff;
+            border: none; border-radius: 14px;
+            font-size: 15px; font-weight: 700;
+            cursor: pointer; margin-top: 16px;
+            transition: all var(--transition);
+            font-family: inherit;
+        }
+        .admin-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+        body.dark .admin-submit { background: var(--gold); color: #0a1e3d; }
+
+        .admin-placeholder {
+            text-align: center; padding: 30px 10px;
+            color: var(--text-muted); font-size: 14px;
+            line-height: 1.6;
+        }
+        .admin-placeholder .big-icon {
+            font-size: 48px; margin-bottom: 12px; display: block;
+        }
+
+        /* ============ TOAST ============ */
+        .toast {
+            position: fixed; bottom: 100px; left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--accent); color: #fff;
+            padding: 12px 22px; border-radius: 999px;
+            font-size: 14px; font-weight: 600;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s ease; z-index: 500;
+        }
+        body.dark .toast { background: var(--gold); color: #0a1e3d; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* ============ АДАПТИВ ============ */
+        @media (min-width: 720px) {
+            /* Нижняя панель теперь видна на всех устройствах */
+            body { padding-bottom: 120px; }
+            .scroll-top { bottom: 110px; }
+            .dropdown { top: 90px; }
+            .modal-overlay { align-items: center; }
+            .modal {
+                border-radius: 24px; max-width: 480px;
+                padding: 20px 24px 24px;
+                transform: translateY(20px) scale(0.98);
+                border-bottom: 1px solid var(--border);
+            }
+            .modal-overlay.open .modal { transform: translateY(0) scale(1); }
+            .modal-handle { display: none; }
+        }
+
+        @media (max-width: 380px) {
+            .brand-title { font-size: 15px; }
+            .day-title { font-size: 22px; }
+            .pair-subject { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="container">
+        <div class="header-top">
+            <a href="https://mpgu.su/homempgu/" target="_blank" rel="noopener">
+                <img src="/icons/logo.svg" alt="МПГУ" class="logo" onerror="this.style.display='none'">
+            </a>
+            <div class="brand-divider"></div>
+            <div class="brand-text">
+                <div class="brand-title">МПГУ · ИФТИС</div>
+                <div class="brand-sub">
+                    <span class="group-num" id="groupDisplay">303</span>
+                    <span class="group-label">группа</span>
+                </div>
+            </div>
+            <button class="hamburger" onclick="toggleMenu()" aria-label="Меню групп">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+        <div class="header-subtitle">Расписание 2026/2027</div>
+    </div>
+
+    <div class="dropdown" id="groupMenu">
+        <div class="course-label">1 курс</div>
+        <div class="group-grid">
+            <button onclick="selectGroup('101')">101</button>
+            <button onclick="selectGroup('102')">102</button>
+            <button onclick="selectGroup('103')">103</button>
+            <button onclick="selectGroup('104')">104</button>
+        </div>
+        <div class="course-label">2 курс</div>
+        <div class="group-grid">
+            <button onclick="selectGroup('201')">201</button>
+            <button onclick="selectGroup('202')">202</button>
+            <button onclick="selectGroup('203')">203</button>
+            <button onclick="selectGroup('204')">204</button>
+        </div>
+        <div class="course-label">3 курс</div>
+        <div class="group-grid">
+            <button onclick="selectGroup('301')">301</button>
+            <button onclick="selectGroup('302')">302</button>
+            <button class="active-group" onclick="selectGroup('303')">303</button>
+        </div>
+        <div class="course-label">4 курс</div>
+        <div class="group-grid">
+            <button onclick="selectGroup('401')">401</button>
+            <button onclick="selectGroup('402')">402</button>
+            <button onclick="selectGroup('403')">403</button>
+        </div>
+        <div class="course-label">5 курс</div>
+        <div class="group-grid">
+            <button onclick="selectGroup('501')">501</button>
+            <button onclick="selectGroup('502')">502</button>
+        </div>
+        <div class="course-label">Магистратура</div>
+        <div class="group-grid">
+            <button onclick="selectGroup('М101')">М101</button>
+            <button onclick="selectGroup('М102')">М102</button>
+            <button onclick="selectGroup('М201')">М201</button>
+        </div>
+    </div>
+</div>
+
+<div class="content">
+    <div class="container">
+
+        <div class="week-switch">
+            <div class="segmented">
+                <button id="weekOdd" class="active" onclick="switchWeek('odd')">Нечетная</button>
+                <button id="weekEven" onclick="switchWeek('even')">Четная</button>
+            </div>
+            <button class="auto-btn active-auto" id="weekAuto" onclick="toggleAutoWeek()">
+                <img src="/icons/refresh.svg" alt="" onerror="this.outerHTML='🔄'">
+                <span>Авто</span>
+            </button>
+        </div>
+
+        <div class="days-row">
+            <button class="day-btn" id="day0" onclick="switchDay(0)">ПН</button>
+            <button class="day-btn" id="day1" onclick="switchDay(1)">ВТ</button>
+            <button class="day-btn" id="day2" onclick="switchDay(2)">СР</button>
+            <button class="day-btn" id="day3" onclick="switchDay(3)">ЧТ</button>
+            <button class="day-btn" id="day4" onclick="switchDay(4)">ПТ</button>
+            <button class="day-btn" id="day5" onclick="switchDay(5)">СБ</button>
+            <button class="today-btn" onclick="goToday()">
+                <img src="/icons/today.svg" alt="" onerror="this.outerHTML='📅'">
+                <span>Сегодня</span>
+            </button>
+        </div>
+
+        <div class="subgroup-selector" id="subgroupSelector">
+            <button class="active" onclick="switchSubgroup('1')">1 подгруппа</button>
+            <button onclick="switchSubgroup('2')">2 подгруппа</button>
+        </div>
+
+        <div class="day-title" id="dayTitle">
+            Понедельник <span class="badge" id="weekBadge">Нечетная</span>
+        </div>
+
+        <div id="pairsContainer"></div>
+        <div style="height: 70px;"></div>
+    </div>
+</div>
+
+<nav class="bottom-nav">
+    <button class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <img src="/icons/calendar.svg" alt="" onerror="this.outerHTML='📅'">
+        <span>Расписание</span>
+    </button>
+    <button onclick="window.open('https://el.mpgu.su/my/', '_blank')">
+        <img src="/icons/infoda.svg" alt="" onerror="this.outerHTML='📋'">
+        <span>ИнфоДа</span>
+    </button>
+    <a href="/teachers.html">
+        <img src="/icons/man.svg" alt="" onerror="this.outerHTML='👤'">
+        <span>Преподаватели</span>
+    </a>
+    <button onclick="openSettings()">
+        <img src="/icons/settings.svg" alt="" onerror="this.outerHTML='⚙️'">
+        <span>Настройки</span>
+    </button>
+</nav>
+
+<button class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- ============ МОДАЛКА НАСТРОЕК ============ -->
+<div class="modal-overlay" id="settingsModal" onclick="closeSettings(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-handle"></div>
+
+        <div class="modal-header">
+            <h2>Настройки</h2>
+            <button class="modal-close" onclick="closeSettings()" aria-label="Закрыть">✕</button>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-label">Оформление</div>
+            <div class="theme-switch">
+                <button class="theme-option" data-theme="light" onclick="setThemeAndUpdate('light')">
+                    <span class="theme-icon">☀️</span>
+                    <span>Светлая</span>
+                </button>
+                <button class="theme-option" data-theme="dark" onclick="setThemeAndUpdate('dark')">
+                    <span class="theme-icon">🌙</span>
+                    <span>Тёмная</span>
+                </button>
+                <button class="theme-option" data-theme="auto" onclick="setThemeAndUpdate('auto')">
+                    <span class="theme-icon">🔄</span>
+                    <span>Системная</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-label">Связь</div>
+            <a class="settings-link support-link" href="https://t.me/milanway" target="_blank" rel="noopener">
+                <img src="/icons/helper.svg" alt="" class="settings-link-icon-img" onerror="this.outerHTML='💬'">
+                <div class="settings-link-text">
+                    <div class="settings-link-title">Техподдержка</div>
+                    <div class="settings-link-sub">@milanway · Telegram</div>
+                </div>
+                <span class="settings-arrow">↗</span>
+            </a>
+            <a class="settings-link" href="/teachers.html">
+                <span class="settings-link-icon">👨‍🏫</span>
+                <div class="settings-link-text">
+                    <div class="settings-link-title">Преподаватели</div>
+                    <div class="settings-link-sub">Справочник ИФТИС</div>
+                </div>
+                <span class="settings-arrow">→</span>
+            </a>
+        </div>
+
+        <div class="settings-section">
+            <div class="settings-label">О проекте</div>
+            <div class="creator-card">
+                <div class="creator-avatar">МТ</div>
+                <div class="creator-info">
+                    <div class="creator-name">Токарев Михаил</div>
+                    <div class="creator-role">Разработчик и автор проекта</div>
+                </div>
+            </div>
+
+            <button class="admin-btn" onclick="openAdminLogin()">
+                <span class="admin-icon">🔐</span>
+                <div class="admin-text">
+                    <div class="admin-title">Войти как администратор</div>
+                    <div class="admin-sub">Доступ к редактированию расписания</div>
+                </div>
+                <span class="settings-arrow" style="color:#fff;">→</span>
+            </button>
+
+            <div class="settings-footer">
+                © 2026 · МПГУ ИФТИС<br>
+                Сделано с <span class="heart">❤️</span> при поддержке <span class="brand">milanway Co</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ============ МОДАЛКА АДМИНА ============ -->
+<div class="admin-modal-overlay" id="adminModal" onclick="closeAdminModal(event)">
+    <div class="admin-modal" onclick="event.stopPropagation()">
+        <div class="admin-modal-header">
+            <button class="admin-back-btn" onclick="closeAdminModal()" aria-label="Назад">←</button>
+            <div class="admin-modal-title" id="adminModalTitle">Вход для администратора</div>
+        </div>
+
+        <!-- Форма входа -->
+        <div id="adminLoginForm">
+            <label class="admin-field-label" for="adminPassword">Пароль</label>
+            <input type="password" class="admin-input" id="adminPassword"
+                   placeholder="Введите пароль" autocomplete="off"
+                   onkeydown="if(event.key==='Enter') tryAdminLogin()">
+            <div class="admin-error" id="adminError">Неправильный пароль</div>
+            <button class="admin-submit" onclick="tryAdminLogin()">Войти</button>
+        </div>
+
+        <!-- Раздел редактирования (заглушка) -->
+        <div id="adminEditPanel" style="display:none;">
+            <div class="admin-placeholder">
+                <span class="big-icon">🛠️</span>
+                Раздел редактирования<br>
+                <small>будет добавлен позже</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    // ==================================================
+    // ДАННЫЕ
+    // ==================================================
+    var dayNames = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+    var currentWeek = 'odd';
+    var currentDay = 0;
+    var currentSubgroup = '1';
+    var currentGroup = '303';
+    var autoWeek = true;
+
+    var ADMIN_PASSWORD = 'admin303';
+    var isAdmin = false;
+
+    var timeSlots = [
+        { num: 1, time: '9:15 – 10:50' },
+        { num: 2, time: '11:00 – 12:35' },
+        { num: 3, time: '13:15 – 14:50' },
+        { num: 4, time: '15:00 – 16:35' },
+        { num: 5, time: '16:45 – 18:20' },
+        { num: 6, time: '18:30 – 20:05' }
+    ];
+    var timeSlotsMaster = [
+        { num: 1, time: '15:00 – 16:35' },
+        { num: 2, time: '16:45 – 18:20' },
+        { num: 3, time: '18:30 – 20:05' }
+    ];
+    var timeSlotsMasterSat = [
+        { num: 1, time: '10:00 – 13:00' },
+        { num: 2, time: '13:15 – 14:50' },
+        { num: 3, time: '15:00 – 16:35' },
+        { num: 4, time: '16:45 – 18:20' }
+    ];
+
+    // ======= РАСПИСАНИЕ ДЛЯ ВСЕХ ГРУПП =======
+    var scheduleData = {};
+
+    // ---- 101 ГРУППА ----
+    scheduleData['101'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: null, 2: { subject: 'Основы Российской Государственности (ЛК)', teacher: 'Виноградова Е.Г.', room: '58' }, 3: { subject: 'Математические основы информатики (ЛК)', teacher: 'Нижников А. И.', room: '7' }, 4: { subject: 'Дискретные модели в информатике (ЛК или ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 5: null, 6: null },
+                1: { 1: { subject: 'Математические основы информатики (ПЗ)', teacher: 'Шапкина В. В.', room: '201' }, 2: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 3: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Котова Е.Л.', room: '23' }, 3: null, 4: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов В. Г.', room: '608' }, 5: { subject: 'Архитектура компьютера (Лаб)', teacher: 'Леонов В. Г.', room: '608' }, 6: null },
+                3: { 1: { subject: 'Учебная практика (УП)', teacher: 'Котова Е.Л.', room: '23' }, 2: { subject: 'Дискретные модели в информатике (ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 3: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Элементарная физика (ПЗ)', teacher: 'Лозовенко С. В.', room: '401' }, 3: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 4: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: null, 2: null, 3: { subject: 'Математические основы информатики (ЛК)', teacher: 'Нижников А. И.', room: '7' }, 4: { subject: 'Дискретные модели в информатике (ЛК или ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 5: null, 6: null },
+                1: { 1: { subject: 'Математические основы информатики (ПЗ)', teacher: 'Шапкина В. В.', room: '201' }, 2: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 3: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Котова Е.Л.', room: '23' }, 3: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов В. Г.', room: '608' }, 4: { subject: 'Иностранный язык (ПЗ)', teacher: 'Щедрина М. Г.', room: '12' }, 5: null, 6: null },
+                3: { 1: { subject: 'Учебная практика (УП)', teacher: 'Котова Е.Л.', room: '23' }, 2: { subject: 'Дискретные модели в информатике (ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 3: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов В. Г.', room: '608' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Элементарная физика (ПЗ)', teacher: 'Лозовенко С. В.', room: '401' }, 3: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 4: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 2: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 3: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О. М.', room: '23' }, 4: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О. М.', room: '23' }, 5: { subject: 'Математические основы информатики (ЛК)', teacher: 'Нижников А. И.', room: '7' }, 6: null },
+                1: { 1: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 2: { subject: 'Математические основы информатики (ПЗ)', teacher: 'Шапкина В. В.', room: '201' }, 3: null, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Котова Е.Л.', room: '23' }, 3: null, 4: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов Виктор Георгиевич', room: '608' }, 5: { subject: 'Архитектура компьютера (Лаб)', teacher: 'Леонов Виктор Георгиевич', room: '608' }, 6: null },
+                3: { 1: { subject: 'Учебная практика (УП)', teacher: 'Котова Е.Л.', room: '23' }, 2: { subject: 'Дискретные модели в информатике (ПЗ)', teacher: 'Нижников Александр Иванович', room: '7' }, 3: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Наталия Владимировна', room: '8' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Элементарная физика (ПЗ)', teacher: 'Лозовенко Сергей Владимирович', room: '401' }, 3: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин Владимир Вячеславович', room: '62' }, 4: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин Владимир Вячеславович', room: '62' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 2: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 3: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О. М.', room: '23' }, 4: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О. М.', room: '23' }, 5: { subject: 'Математические основы информатики (ЛК)', teacher: 'Нижников А. И.', room: '7' }, 6: null },
+                1: { 1: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 2: { subject: 'Математические основы информатики (ПЗ)', teacher: 'Шапкина В. В.', room: '201' }, 3: null, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Котова Е.Л.', room: '23' }, 3: null, 4: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов Виктор Георгиевич', room: '608' }, 5: { subject: 'Архитектура компьютера (Лаб)', teacher: 'Леонов Виктор Георгиевич', room: '608' }, 6: null },
+                3: { 1: { subject: 'Учебная практика (УП)', teacher: 'Котова Е.Л.', room: '23' }, 2: { subject: 'Дискретные модели в информатике (ПЗ)', teacher: 'Нижников Александр Иванович', room: '7' }, 3: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Наталия Владимировна', room: '8' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Элементарная физика (ПЗ)', teacher: 'Лозовенко Сергей Владимирович', room: '401' }, 3: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин Владимир Вячеславович', room: '62' }, 4: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин Владимир Вячеславович', room: '62' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 102 ГРУППА ----
+    scheduleData['102'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 2: { subject: 'Основы Российской Государственности (ЛК)', teacher: 'Виноградова Е.Г.', room: '58' }, 3: { subject: 'Математические основы информатики (ЛК)', teacher: 'Нижников А. И.', room: '7' }, 4: { subject: 'Дискретные модели в информатике (ЛК или ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Математические основы информатики (ПЗ)', teacher: 'Шапкина В. В.', room: '201' }, 3: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 4: { subject: 'История России (ЛК)', teacher: 'Филина Е.И.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: null, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов В.Г.', room: '608' }, 2: { subject: 'Архитектура компьютера (Лаб)', teacher: 'Леонов В.Г.', room: '608' }, 3: { subject: 'Дискретные модели в информатике (ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 4: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 5: null, 6: null },
+                4: { 1: { subject: 'Элементарная физика (ПЗ)', teacher: 'Лозовенко С. В.', room: '401' }, 2: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Учебная практика (УП)', teacher: 'Вахтомина Е. А.', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 2: { subject: 'Основы Российской Государственности (ЛК)', teacher: 'Виноградова Е.Г.', room: '58' }, 3: { subject: 'Математические основы информатики (ЛК)', teacher: 'Нижников А. И.', room: '7' }, 4: { subject: 'Дискретные модели в информатике (ЛК или ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Математические основы информатики (ПЗ)', teacher: 'Шапкина В. В.', room: '201' }, 3: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 4: { subject: 'История России (ЛК)', teacher: 'Филина Е.И.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов В. Г.', room: '608' }, 2: { subject: 'Архитектура компьютера (Лаб)', teacher: 'Леонов В. Г.', room: '608' }, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: null, 3: { subject: 'Дискретные модели в информатике (ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 4: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 5: null, 6: null },
+                4: { 1: { subject: 'Элементарная физика (ПЗ)', teacher: 'Лозовенко С. В.', room: '401' }, 2: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Учебная практика (УП)', teacher: 'Вахтомина Е. А.', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Н.', room: '58' }, 2: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Н.', room: '58' }, 3: { subject: 'Возрастная анатомия, физиология и культура здоровья (ЛК)', teacher: 'Мишланова О.М.', room: '58' }, 4: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О.М.', room: '58' }, 5: { subject: 'Математические основы информатики (ЛК)', teacher: 'Нижников А. И.', room: '7' }, 6: null },
+                1: { 1: null, 2: { subject: 'История России (ПЗ)', teacher: 'Филина Е.И.', room: '58' }, 3: { subject: 'Математические основы информатики (ПЗ)', teacher: 'Шапкина В. В.', room: '201' }, 4: { subject: 'История России (ПЗ)', teacher: 'Филина Е.И.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: null, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов В.Г.', room: '608' }, 2: { subject: 'Архитектура компьютера (Лаб)', teacher: 'Леонов В.Г.', room: '608' }, 3: { subject: 'Дискретные модели в информатике (ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 4: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 5: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 6: null },
+                4: { 1: { subject: 'Элементарная физика (ПЗ)', teacher: 'Лозовенко С. В.', room: '401' }, 2: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Учебная практика (УП)', teacher: 'Вахтомина Е. А.', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Н.', room: '58' }, 2: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Н.', room: '58' }, 3: { subject: 'Возрастная анатомия, физиология и культура здоровья (ЛК)', teacher: 'Мишланова О.М.', room: '58' }, 4: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О.М.', room: '58' }, 5: { subject: 'Математические основы информатики (ЛК)', teacher: 'Нижников А. И.', room: '7' }, 6: null },
+                1: { 1: null, 2: { subject: 'История России (ПЗ)', teacher: 'Филина Е.И.', room: '58' }, 3: { subject: 'Математические основы информатики (ПЗ)', teacher: 'Шапкина В. В.', room: '201' }, 4: { subject: 'История России (ПЗ)', teacher: 'Филина Е.И.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Архитектура компьютера (ПЗ)', teacher: 'Леонов В. Г.', room: '608' }, 2: { subject: 'Архитектура компьютера (Лаб)', teacher: 'Леонов В. Г.', room: '608' }, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: null, 3: { subject: 'Дискретные модели в информатике (ПЗ)', teacher: 'Нижников А. И.', room: '7' }, 4: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 5: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 6: null },
+                4: { 1: { subject: 'Элементарная физика (ПЗ)', teacher: 'Лозовенко С. В.', room: '401' }, 2: { subject: 'Высшая математика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Учебная практика (УП)', teacher: 'Вахтомина Е. А.', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 103 ГРУППА (НЕТ ПОДГРУПП) ----
+    scheduleData['103'] = {
+        type: 'standard',
+        subgroups: ['1'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 2: { subject: 'Основы Российской Государственности (ЛК)', teacher: 'Виноградова Е. Г.', room: '58' }, 3: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 4: { subject: 'Геометрия (ЛК)', teacher: 'Умнова С. В.', room: '55' }, 5: { subject: 'Геометрия (ЛК)', teacher: 'Умнова С. В.', room: '55' }, 6: null },
+                1: { 1: { subject: 'Геометрия (ПЗ)', teacher: 'Умнова С. В.', room: '55' }, 2: { subject: 'Математический Анализ (ПЗ)', teacher: 'Умнова С. В.', room: '55' }, 3: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 4: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 5: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 6: null },
+                2: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Иностранный язык (ПЗ)', teacher: 'Борунова Е. Б.', room: '12' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Котова Е. Л.', room: '23' }, 3: null, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: null, 3: { subject: 'Элементарная Физика (ПЗ)', teacher: 'Лозовенко С. В.', room: '401' }, 4: { subject: 'Алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 5: { subject: 'Алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' }, 6: { subject: 'Алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' } },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: null, 2: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О.М.', room: '58' }, 3: { subject: 'Возрастная анатомия, физиология и культура здоровья (ЛК)', teacher: 'Мишланова О.М.', room: '58' }, 4: null, 5: null, 6: null },
+                1: { 1: { subject: 'Геометрия (ПЗ)', teacher: 'Умнова С. В.', room: '55' }, 2: { subject: 'Математический Анализ (ПЗ)', teacher: 'Умнова С. В.', room: '55' }, 3: { subject: 'Математический Анализ (ЛК)', teacher: 'Умнова С. В.', room: '55' }, 4: { subject: 'Математический Анализ (ЛК)', teacher: 'Умнова С. В.', room: '55' }, 5: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 6: null },
+                2: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Иностранный язык (ПЗ)', teacher: 'Борунова Е. Б.', room: '12' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Котова Е. Л.', room: '23' }, 3: null, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: null, 3: { subject: 'Элементарная Физика (ПЗ)', teacher: 'Лозовенко С. В.', room: '401' }, 4: { subject: 'Алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 5: { subject: 'Алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' }, 6: { subject: 'Алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' } },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 104 ГРУППА (3 ПОДГРУППЫ) ----
+    scheduleData['104'] = {
+        type: 'standard',
+        subgroups: ['1', '2', '3'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 2: { subject: 'Основы Российской Государственности (ЛК)', teacher: 'Виноградова Е. Г.', room: '58' }, 3: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 4: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Елезов М. С.', room: '55' }, 5: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Елезов М. С.', room: '55' }, 6: null },
+                1: { 1: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 2: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 3: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 4: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 2: { subject: 'Речевые практики (ПЗ)', teacher: 'Князева О. Ю.', room: '12' }, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Информатика: Программирование (Лаб)', teacher: 'Парфенов С. Ю.', room: '402' }, 2: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 3: { subject: 'Математический анализ (ПЗ)', teacher: 'Батищева Ю. А.', room: '64' }, 4: { subject: 'Математический анализ (ПЗ)', teacher: 'Батищева Ю. А.', room: '64' }, 5: null, 6: null },
+                4: { 1: { subject: 'Линейная алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' }, 2: { subject: 'Математический Анализ (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 3: { subject: 'Линейная алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 2: { subject: 'Основы Российской Государственности (ЛК)', teacher: 'Виноградова Е. Г.', room: '58' }, 3: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 4: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Венедиктов', room: '55' }, 5: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Венедиктов', room: '55' }, 6: null },
+                1: { 1: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 2: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 3: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 4: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 2: { subject: 'Речевые практики (ПЗ)', teacher: 'Князева О. Ю.', room: '12' }, 3: { subject: 'Иностранный Язык (ПЗ)', teacher: 'Щедрина М. Г.', room: '12' }, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Информатика: Программирование (Лаб)', teacher: 'Парфенов С. Ю.', room: '402' }, 3: { subject: 'Математический анализ (ПЗ)', teacher: 'Тарасевич Е. А.', room: '54' }, 4: { subject: 'Математический анализ (ПЗ)', teacher: 'Тарасевич Е. А.', room: '54' }, 5: null, 6: null },
+                4: { 1: { subject: 'Линейная алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' }, 2: { subject: 'Математический Анализ (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 3: { subject: 'Линейная алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '3': {
+                0: { 1: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 2: { subject: 'Основы Российской Государственности (ЛК)', teacher: 'Виноградова Е. Г.', room: '58' }, 3: { subject: 'Основы Российской Государственности (ПЗ)', teacher: 'Виноградова Е. Г.', room: '58' }, 4: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Венедиктов', room: '55' }, 5: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Венедиктов', room: '55' }, 6: null },
+                1: { 1: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 2: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 3: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 4: { subject: 'История России (ЛК)', teacher: 'Филина Е. И.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 2: { subject: 'Речевые практики (ПЗ)', teacher: 'Князева О. Ю.', room: '12' }, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Иностранный язык', teacher: 'Глазунова Т. С.', room: '8' }, 2: { subject: 'Информатика: Программирование (Лаб)', teacher: 'Парфенов С. Ю.', room: '402' }, 3: { subject: 'Математический анализ (ПЗ)', teacher: 'Тарасевич Е. А.', room: '54' }, 4: { subject: 'Математический анализ (ПЗ)', teacher: 'Тарасевич Е. А.', room: '54' }, 5: null, 6: null },
+                4: { 1: { subject: 'Линейная алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' }, 2: { subject: 'Математический Анализ (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 3: { subject: 'Линейная алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О. М.', room: '23' }, 3: { subject: 'Возрастная анатомия, физиология и культура здоровья (ЛК)', teacher: 'Мишланова О. М.', room: '23' }, 4: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Елезов М. С.', room: '55' }, 5: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Елезов М. С.', room: '55' }, 6: null },
+                1: { 1: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 2: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 3: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Речевые практики (ПЗ)', teacher: 'Князева О. Ю.', room: '12' }, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Информатика: Программирование (Лаб)', teacher: 'Парфенов С. Ю.', room: '402' }, 2: { subject: 'Иностранный язык (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 3: { subject: 'Математический анализ (ПЗ)', teacher: 'Батищева Ю. А.', room: '64' }, 4: { subject: 'Математический анализ (ПЗ)', teacher: 'Батищева Ю. А.', room: '64' }, 5: null, 6: null },
+                4: { 1: { subject: 'Линейная алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' }, 2: { subject: 'Математический Анализ (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 3: { subject: 'Линейная алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О. М.', room: '23' }, 3: { subject: 'Возрастная анатомия, физиология и культура здоровья (ЛК)', teacher: 'Мишланова О. М.', room: '23' }, 4: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Елезов М. С.', room: '55' }, 5: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Елезов М. С.', room: '55' }, 6: null },
+                1: { 1: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 2: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 3: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Речевые практики (ПЗ)', teacher: 'Князева О. Ю.', room: '12' }, 3: { subject: 'Иностранный Язык (ПЗ)', teacher: 'Щедрина М. Г.', room: '12' }, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Информатика: Программирование (Лаб)', teacher: 'Парфенов С. Ю.', room: '402' }, 3: { subject: 'Математический анализ (ПЗ)', teacher: 'Тарасевич Е. А.', room: '54' }, 4: { subject: 'Математический анализ (ПЗ)', teacher: 'Тарасевич Е. А.', room: '54' }, 5: null, 6: null },
+                4: { 1: { subject: 'Линейная алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' }, 2: { subject: 'Математический Анализ (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 3: { subject: 'Линейная алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '3': {
+                0: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Возрастная анатомия, физиология и культура здоровья (ПЗ)', teacher: 'Мишланова О. М.', room: '23' }, 3: { subject: 'Возрастная анатомия, физиология и культура здоровья (ЛК)', teacher: 'Мишланова О. М.', room: '23' }, 4: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Елезов М. С.', room: '55' }, 5: { subject: 'Общая Физика. Механика (ПЗ)', teacher: 'Елезов М. С.', room: '55' }, 6: null },
+                1: { 1: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 2: { subject: 'Общая Физика. Механика (ЛК)', teacher: 'Рябчук С. А.', room: '7' }, 3: { subject: 'История России (ПЗ)', teacher: 'Филина Е. И.', room: '58' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '9:00 – 10:30' }, 2: { subject: 'Речевые практики (ПЗ)', teacher: 'Князева О. Ю.', room: '12' }, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Иностранный язык', teacher: 'Глазунова Т. С.', room: '8' }, 2: { subject: 'Информатика: Программирование (Лаб)', teacher: 'Парфенов С. Ю.', room: '402' }, 3: { subject: 'Математический анализ (ПЗ)', teacher: 'Тарасевич Е. А.', room: '54' }, 4: { subject: 'Математический анализ (ПЗ)', teacher: 'Тарасевич Е. А.', room: '54' }, 5: null, 6: null },
+                4: { 1: { subject: 'Линейная алгебра (ПЗ)', teacher: 'Матвеев Е. М.', room: '64' }, 2: { subject: 'Математический Анализ (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 3: { subject: 'Линейная алгебра (ЛК)', teacher: 'Матвеев Е. М.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 201 ГРУППА ----
+    scheduleData['201'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '' }, 2: null, 3: { subject: 'Программное обеспечение систем и сетей (Лаб)', teacher: 'Гусин К. Ф.', room: '606' }, 4: null, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Чулкова Г. М.', room: '30/49' }, 3: { subject: 'Психология (ПЗ)', teacher: 'Киселева Т. Б.', room: '58' }, 4: { subject: 'Психология (ЛК)', teacher: 'Киселева Т. Б.', room: '58' }, 5: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '201' }, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ЛК: 02.09, 16.09, 30.09, 14.10 | ПЗ: 28.10, 11.11, 25.11, 09.12, 23.12)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Теплякова К. О.', room: '12' }, 3: { subject: 'Программирование (ЛК)', teacher: 'Парфенов С. Ю.', room: '301' }, 4: { subject: 'Программирование (ЛК)', teacher: 'Парфенов С. Ю.', room: '301' }, 5: null, 6: null },
+                3: { 1: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 2: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Программное обеспечение систем и сетей (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 4: { subject: 'Физический практикум (Лаб)', teacher: 'Окунев О. В.', room: '45' }, 5: null, 6: null },
+                4: { 1: { subject: 'Нормативно-правовые основы профессиональной деятельности (ЛК: 04.09, 16.09, 30.09, 14.10 | ПЗ: 28.10, 11.11, 25.11, 09.12, 23.12)', teacher: 'Поликашина О. В.', room: '58' }, 2: { subject: 'Безопасность жизнедеятельности (ПЗ)', teacher: '', room: '' }, 3: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Полякова О. Н.', room: '13' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 3: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '' }, 2: null, 3: { subject: 'Физический практикум (Лаб)', teacher: 'Беликов И. И.', room: '45' }, 4: null, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Чулкова Г. М.', room: '30/49' }, 3: { subject: 'Психология (ПЗ)', teacher: 'Киселева Т. Б.', room: '58' }, 4: { subject: 'Психология (ЛК)', teacher: 'Киселева Т. Б.', room: '58' }, 5: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '201' }, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ЛК: 02.09, 16.09, 30.09, 14.10 | ПЗ: 28.10, 11.11, 25.11, 09.12, 23.12)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Полякова О. Н.', room: '13' }, 3: { subject: 'Программирование (ЛК)', teacher: 'Парфенов С. Ю.', room: '301' }, 4: { subject: 'Программирование (ЛК)', teacher: 'Парфенов С. Ю.', room: '301' }, 5: null, 6: null },
+                3: { 1: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 2: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Программное обеспечение систем и сетей (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 4: { subject: 'Программное обеспечение систем и сетей (Лаб)', teacher: 'Гусин К. Ф.', room: '606' }, 5: null, 6: null },
+                4: { 1: { subject: 'Нормативно-правовые основы профессиональной деятельности (ЛК: 04.09, 16.09, 30.09, 14.10 | ПЗ: 28.10, 11.11, 25.11, 09.12, 23.12)', teacher: 'Поликашина О. В.', room: '58' }, 2: { subject: 'Безопасность жизнедеятельности (ПЗ)', teacher: '', room: '' }, 3: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Полякова О. Н.', room: '13' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 3: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 4: { subject: 'Робототехника (ПЗ)', teacher: 'Дульцев А. И.', room: '201' }, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '' }, 2: null, 3: { subject: 'Программное обеспечение систем и сетей (Лаб)', teacher: 'Гусин К. Ф.', room: '606' }, 4: null, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Чулкова Г. М.', room: '30/49' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '201' }, 6: null },
+                2: { 1: { subject: 'Педагогика (ЛК)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 2: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Теплякова К. О.', room: '12' }, 3: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 2: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Программное обеспечение систем и сетей (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 4: { subject: 'Физический практикум (Лаб)', teacher: 'Окунев О. В.', room: '45' }, 5: null, 6: null },
+                4: { 1: { subject: 'Безопасность жизнедеятельности (ЛК)', teacher: '', room: '' }, 2: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Полякова О. Н.', room: '13' }, 3: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Полякова О. Н.', room: '13' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 3: { subject: 'Робототехника (ПЗ)', teacher: 'Дульцев А. И.', room: '201' }, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '' }, 2: null, 3: { subject: 'Программное обеспечение систем и сетей (Лаб)', teacher: 'Гусин К. Ф.', room: '606' }, 4: null, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Чулкова Г. М.', room: '30/49' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '201' }, 6: null },
+                2: { 1: { subject: 'Педагогика (ЛК)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 2: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Теплякова К. О.', room: '12' }, 3: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 2: { subject: 'Высшая математика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Программное обеспечение систем и сетей (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 4: { subject: 'Физический практикум (Лаб)', teacher: 'Окунев О. В.', room: '45' }, 5: null, 6: null },
+                4: { 1: { subject: 'Безопасность жизнедеятельности (ЛК)', teacher: '', room: '' }, 2: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Полякова О. Н.', room: '13' }, 3: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Полякова О. Н.', room: '13' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 202 ГРУППА ----
+    scheduleData['202'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Гайдученко И. А.', room: '30' }, 2: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 3: null, 4: null, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Специальный рисунок и основы композиции (ЛК)', teacher: 'Макленкова С. Ю.', room: 'ул. Усачева, 30' }, 3: { subject: 'Прикладная механика (ЛК)', teacher: 'Бирюков С. В.', room: '12' }, 4: { subject: 'Психология (ЛК)', teacher: 'Киселева Т. Б.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ЛК: 02.09, 16.09, 30.09, 14.10)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 3: { subject: 'Программирование (ЛК)', teacher: 'Парфенов С. Ю.', room: '301' }, 4: { subject: 'Программирование (ЛК)', teacher: 'Парфенов С. Ю.', room: '301' }, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Программное обеспечение систем и сетей (Лаб)', teacher: 'Гусин К. Ф.', room: '606' }, 3: { subject: 'Программное обеспечение систем и сетей (ЛК)', teacher: 'Гусин К. Ф.', room: '606' }, 4: { subject: 'Учебная практика (УП)', teacher: 'Сапего И. П.', room: '' }, 5: null, 6: null },
+                4: { 1: { subject: 'Нормативно-правовые основы профессиональной деятельности (ЛК: 04.09, 16.09, 30.09, 14.10 | ПЗ: 28.10, 11.11, 25.11, 09.12, 23.12)', teacher: 'Поликашина О. В.', room: '58' }, 2: { subject: 'Нормативно-правовые основы профессиональной деятельности (ПЗ: 28.10, 11.11, 25.11, 09.12, 23.12)', teacher: 'Поликашина О. В.', room: '58' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Гайдученко И. А.', room: '30' }, 2: { subject: 'Программное обеспечение систем и сетей (Лаб)', teacher: 'Гусин К. Ф.', room: '606' }, 3: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 4: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 5: null, 6: null },
+                1: { 1: { subject: 'Инженерная и компьютерная графика (Лаб)', teacher: 'Макленкова С. Ю', room: 'ул. Усачева 30' }, 2: { subject: 'Специальный рисунок и основы композиции (ЛК)', teacher: 'Макленкова С. Ю.', room: 'ул. Усачева, 30' }, 3: { subject: 'Прикладная механика (ЛК)', teacher: 'Бирюков С. В.', room: '12' }, 4: { subject: 'Психология (ЛК)', teacher: 'Киселева Т. Б.', room: '58' }, 5: null, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ЛК: 02.09, 16.09, 30.09, 14.10)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 3: { subject: 'Программирование (ЛК)', teacher: 'Парфенов С. Ю.', room: '301' }, 4: { subject: 'Программирование (ЛК)', teacher: 'Парфенов С. Ю.', room: '301' }, 5: null, 6: null },
+                3: { 1: null, 2: null, 3: { subject: 'Программное обеспечение систем и сетей (ЛК)', teacher: 'Гусин К. Ф.', room: '606' }, 4: { subject: 'Учебная практика (УП)', teacher: 'Сапего И. П.', room: '' }, 5: null, 6: null },
+                4: { 1: { subject: 'Нормативно-правовые основы профессиональной деятельности (ЛК: 04.09, 16.09, 30.09, 14.10 | ПЗ: 28.10, 11.11, 25.11, 09.12, 23.12)', teacher: 'Поликашина О. В.', room: '58' }, 2: { subject: 'Нормативно-правовые основы профессиональной деятельности (ПЗ: 28.10, 11.11, 25.11, 09.12, 23.12)', teacher: 'Поликашина О. В.', room: '58' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Гайдученко И. А.', room: '47' }, 2: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 3: null, 4: null, 5: null, 6: null },
+                1: { 1: { subject: 'Инженерная и компьютерная графика (Лаб)', teacher: 'Макленкова С. Ю.', room: 'ул. Усачева, 30' }, 2: { subject: 'Специальный рисунок и основы композиции (ПЗ)', teacher: 'Макленкова С. Ю.', room: 'ул. Усачева, 30' }, 3: { subject: 'Психология (ПЗ)', teacher: 'Киселева Т. Б.', room: '58' }, 4: { subject: 'Прикладная механика (ПЗ)', teacher: 'Бирюков С. В.', room: '12' }, 5: { subject: 'Прикладная механика (ПЗ)', teacher: 'Бирюков С. В.', room: '12' }, 6: null },
+                2: { 1: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 2: { subject: 'Финансово-экономический практикум (ПЗ: 23.09, 07.10, 21.10, 04.12, 18.12)', teacher: 'Демина В. В.', room: '55' }, 3: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '301' }, 4: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '301' }, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Программное обеспечение систем и сетей (Лаб)', teacher: 'Гусин К. Ф.', room: '606' }, 3: { subject: 'Программное обеспечение систем и сетей (ЛК)', teacher: 'Гусин К. Ф.', room: '606' }, 4: { subject: 'Учебная практика (УП)', teacher: 'Сапего И. П.', room: '' }, 5: null, 6: null },
+                4: { 1: { subject: 'Безопасность жизнедеятельности (ЛК)', teacher: '', room: '' }, 2: { subject: 'Безопасность жизнедеятельности (ПЗ)', teacher: '', room: '' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Гайдученко И. А.', room: '47' }, 2: { subject: 'Программное обеспечение систем и сетей (Лаб)', teacher: 'Гусин К. Ф.', room: '606' }, 3: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 4: { subject: 'Программирование (ПЗ)', teacher: 'Парфенов С. Ю.', room: '201' }, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Специальный рисунок и основы композиции (ПЗ)', teacher: 'Макленкова С. Ю.', room: 'ул. Усачева, 30' }, 3: { subject: 'Психология (ПЗ)', teacher: 'Киселева Т. Б.', room: '58' }, 4: { subject: 'Прикладная механика (ПЗ)', teacher: 'Бирюков С. В.', room: '12' }, 5: { subject: 'Прикладная механика (ПЗ)', teacher: 'Бирюков С. В.', room: '12' }, 6: null },
+                2: { 1: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 2: { subject: 'Финансово-экономический практикум (ПЗ: 23.09, 07.10, 21.10, 04.12, 18.12)', teacher: 'Демина В. В.', room: '55' }, 3: null, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: null, 3: { subject: 'Программное обеспечение систем и сетей (ЛК)', teacher: 'Гусин К. Ф.', room: '606' }, 4: { subject: 'Учебная практика (УП)', teacher: 'Сапего И. П.', room: '' }, 5: null, 6: null },
+                4: { 1: { subject: 'Безопасность жизнедеятельности (ЛК)', teacher: '', room: '' }, 2: { subject: 'Безопасность жизнедеятельности (ПЗ)', teacher: '', room: '' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 203 ГРУППА ----
+    scheduleData['203'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '' }, 2: null, 3: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Коротаева Е. А.', room: '13' }, 4: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Коротаева Е. А.', room: '13' }, 5: null, 6: null },
+                1: { 1: { subject: 'Органическая химия (ЛК)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 2: { subject: 'Аналитическая химия (ЛК)', teacher: 'Шляхова М. А.', room: 'ИБХ 408' }, 3: null, 4: { subject: 'Психология (ЛК)', teacher: '', room: '' }, 5: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '201' }, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ЛК: 02.09, 16.09, 30.09, 14.10)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Финансово-экономический практикум (ПЗ: 28.10, 11.11, 25.11, 23.12)', teacher: 'Демина В. В.', room: '30' }, 3: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Виноградова Н. Б.', room: '30' }, 4: { subject: 'Физический практикум (Лаб)', teacher: 'Виноградова Н.Б.', room: '45/47' }, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Аналитическая химия (Лаб)', teacher: 'Шляхова М. А.', room: 'ИБХ 410' }, 3: { subject: 'Аналитическая химия (Лаб)', teacher: 'Шляхова М. А.', room: 'ИБХ 410' }, 4: { subject: 'Органическая химия (Лаб)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 5: { subject: 'Органическая химия (Лаб)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 6: null },
+                4: { 1: { subject: 'Нормативно-правовые основы профессиональной деятельности (ЛК: 04.09, 16.09, 30.09, 14.10)', teacher: 'Поликашина О. В.', room: '58' }, 2: null, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '12:40 – 14:10' }, 4: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '' }, 2: null, 3: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Коротаева Е. А.', room: '13' }, 4: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Коротаева Е. А.', room: '13' }, 5: null, 6: null },
+                1: { 1: { subject: 'Органическая химия (ЛК)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 2: { subject: 'Аналитическая химия (ЛК)', teacher: 'Шляхова М. А.', room: 'ИБХ 408' }, 3: null, 4: { subject: 'Психология (ЛК)', teacher: '', room: '' }, 5: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '201' }, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ЛК: 02.09, 16.09, 30.09, 14.10)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Финансово-экономический практикум (ПЗ: 28.10, 11.11, 25.11, 23.12)', teacher: 'Демина В. В.', room: '30' }, 3: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Виноградова Н. Б.', room: '30' }, 4: { subject: 'Физический практикум (Лаб)', teacher: 'Виноградова Н.Б.', room: '45/47' }, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Органическая химия (Лаб)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 3: { subject: 'Органическая химия (Лаб)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 4: { subject: 'Аналитическая химия (Лаб)', teacher: 'Шляхова М. А.', room: 'ИБХ 410' }, 5: { subject: 'Аналитическая химия (Лаб)', teacher: 'Шляхова М. А.', room: 'ИБХ 410' }, 6: null },
+                4: { 1: { subject: 'Нормативно-правовые основы профессиональной деятельности (ЛК: 04.09, 16.09, 30.09, 14.10)', teacher: 'Поликашина О. В.', room: '58' }, 2: null, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '12:40 – 14:10' }, 4: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '' }, 2: null, 3: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Коротаева Е. А.', room: '13' }, 4: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Коротаева Е. А.', room: '13' }, 5: null, 6: null },
+                1: { 1: { subject: 'Органическая химия (ЛК)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 2: { subject: 'Аналитическая химия (ЛК)', teacher: 'Шляхова М. А.', room: 'ИБХ 408' }, 3: null, 4: { subject: 'Психология (ПЗ)', teacher: '', room: '' }, 5: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '201' }, 6: null },
+                2: { 1: { subject: 'Педагогика (ЛК)', teacher: '', room: '' }, 2: { subject: 'Педагогика (ПЗ)', teacher: '', room: '' }, 3: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Виноградова Н. Б.', room: '30' }, 4: { subject: 'Физический практикум (Лаб)', teacher: 'Виноградова Н.Б.', room: '45/47' }, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Аналитическая химия (Лаб)', teacher: 'Шляхова М. А.', room: 'ИБХ 410' }, 3: { subject: 'Аналитическая химия (Лаб)', teacher: 'Шляхова М. А.', room: 'ИБХ 410' }, 4: { subject: 'Органическая химия (Лаб)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 5: { subject: 'Органическая химия (Лаб)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 6: null },
+                4: { 1: { subject: 'Безопасность жизнедеятельности (ЛК)', teacher: '', room: '' }, 2: { subject: 'Нормативно-правовые основы профессиональной деятельности (ПЗ: 23.09, 07.10, 21.10, 04.12, 18.12)', teacher: 'Поликашина О. В.', room: '58' }, 3: { subject: 'Безопасность жизнедеятельности (ПЗ)', teacher: '', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '' }, 2: null, 3: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Коротаева Е. А.', room: '13' }, 4: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Коротаева Е. А.', room: '13' }, 5: null, 6: null },
+                1: { 1: { subject: 'Органическая химия (ЛК)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 2: { subject: 'Аналитическая химия (ЛК)', teacher: 'Шляхова М. А.', room: 'ИБХ 408' }, 3: null, 4: { subject: 'Психология (ПЗ)', teacher: '', room: '' }, 5: { subject: 'Учебная практика (УП)', teacher: 'Самохин А.', room: '201' }, 6: null },
+                2: { 1: { subject: 'Педагогика (ЛК)', teacher: '', room: '' }, 2: { subject: 'Педагогика (ПЗ)', teacher: '', room: '' }, 3: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Виноградова Н. Б.', room: '30' }, 4: { subject: 'Физический практикум (Лаб)', teacher: 'Виноградова Н.Б.', room: '45/47' }, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Органическая химия (Лаб)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 3: { subject: 'Органическая химия (Лаб)', teacher: 'Хребтова С. Б.', room: 'ИБХ 104' }, 4: { subject: 'Аналитическая химия (Лаб)', teacher: 'Шляхова М. А.', room: 'ИБХ 410' }, 5: { subject: 'Аналитическая химия (Лаб)', teacher: 'Шляхова М. А.', room: 'ИБХ 410' }, 6: null },
+                4: { 1: { subject: 'Безопасность жизнедеятельности (ЛК)', teacher: '', room: '' }, 2: { subject: 'Нормативно-правовые основы профессиональной деятельности (ПЗ: 23.09, 07.10, 21.10, 04.12, 18.12)', teacher: 'Поликашина О. В.', room: '58' }, 3: { subject: 'Безопасность жизнедеятельности (ПЗ)', teacher: '', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 204 ГРУППА ----
+    scheduleData['204'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 3: { subject: 'Органическая химия (ЛК)', teacher: 'Степанов М. Е.', room: '62' }, 4: { subject: 'Профессиональная коммуникация на иностранном языке (ПЗ)', teacher: 'Щедрина М.Г.', room: '8' }, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:40 – 12:20' }, 3: { subject: 'Практикум по электричеству и магнетизму (Лаб)', teacher: 'Беликов И. И.', room: '45' }, 4: { subject: 'Практикум по электричеству и магнетизму (Лаб)', teacher: 'Беликов И. И.', room: '45' }, 5: null, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ЛК: 02.09, 16.09, 30.09, 14.10)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 3: { subject: 'Векторный и тензорный анализ (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 4: { subject: 'Векторный и тензорный анализ (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 5: null, 6: null },
+                3: { 1: null, 2: null, 3: { subject: 'Теория функции комплексного переменного (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 4: { subject: 'Теория функции комплексного переменного (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 5: null, 6: null },
+                4: { 1: { subject: 'Нормативно-правовые основы профессиональной деятельности (ПЗ: 23.09, 07.10, 21.10, 04.12, 18.12)', teacher: 'Поликашина О. В.', room: '58' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 3: { subject: 'Дифференциальные уравнения (ЛК)', teacher: 'Гладуш М. Г.', room: '54' }, 4: { subject: 'Дифференциальные уравнения (ПЗ)', teacher: 'Гладуш М. Г.', room: '54' }, 5: { subject: 'Дифференциальные уравнения (ПЗ)', teacher: 'Гладуш М. Г.', room: '54' }, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 3: { subject: 'Органическая химия (ЛК)', teacher: 'Степанов М. Е.', room: '62' }, 4: null, 5: null, 6: null },
+                1: { 1: { subject: 'Практикум по электричеству и магнетизму (Лаб)', teacher: 'Колбатова А. И.', room: '45' }, 2: { subject: 'Практикум по электричеству и магнетизму (Лаб)', teacher: 'Колбатова А. И.', room: '45' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ЛК: 02.09, 16.09, 30.09, 14.10)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 3: { subject: 'Векторный и тензорный анализ (ПЗ)', teacher: 'Хецева М. С.', room: '62' }, 4: { subject: 'Векторный и тензорный анализ (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 5: null, 6: null },
+                3: { 1: null, 2: null, 3: { subject: 'Теория функции комплексного переменного (ПЗ)', teacher: 'Хецева М. С.', room: '62' }, 4: { subject: 'Теория функции комплексного переменного (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 5: { subject: 'Профессиональная коммуникация на иностранном языке (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 6: null },
+                4: { 1: { subject: 'Нормативно-правовые основы профессиональной деятельности (ПЗ: 23.09, 07.10, 21.10, 04.12, 18.12)', teacher: 'Поликашина О. В.', room: '58' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 3: { subject: 'Дифференциальные уравнения (ЛК)', teacher: 'Гладуш М. Г.', room: '54' }, 4: { subject: 'Дифференциальные уравнения (ПЗ)', teacher: 'Гладуш М. Г.', room: '54' }, 5: { subject: 'Дифференциальные уравнения (ПЗ)', teacher: 'Гладуш М. Г.', room: '54' }, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 3: { subject: 'Органическая химия (ПЗ)', teacher: 'Степанов М. Е., Голенищев М. А.', room: '62' }, 4: { subject: 'Профессиональная коммуникация на иностранном языке (ПЗ)', teacher: 'Щедрина М.Г.', room: '8' }, 5: null, 6: null },
+                1: { 1: null, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:40 – 12:20' }, 3: { subject: 'Практикум по электричеству и магнетизму (Лаб)', teacher: 'Беликов И. И.', room: '45' }, 4: { subject: 'Практикум по электричеству и магнетизму (Лаб)', teacher: 'Беликов И. И.', room: '45' }, 5: null, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ПЗ: 07.10, 21.10, 04.12, 18.12)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 3: { subject: 'Векторный и тензорный анализ (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: null, 3: { subject: 'Теория функции комплексного переменного (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 4: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 5: null, 6: null },
+                4: { 1: { subject: 'Безопасность жизнедеятельности (ЛК)', teacher: '', room: '' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 3: { subject: 'Нормативно-правовые основы профессиональной деятельности (ПЗ: 23.09, 07.10, 21.10, 04.12, 18.12)', teacher: 'Поликашина О. В.', room: '58' }, 4: { subject: 'Безопасность жизнедеятельности (ПЗ)', teacher: '', room: '' }, 5: { subject: 'Дифференциальные уравнения (ПЗ)', teacher: 'Гладуш М. Г.', room: '54' }, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Солдатенкова М. Д.', room: '56' }, 3: { subject: 'Органическая химия (ПЗ)', teacher: 'Степанов М. Е., Голенищев М. А.', room: '62' }, 4: { subject: 'Профессиональная коммуникация на иностранном языке (ПЗ)', teacher: 'Щедрина М.Г.', room: '8' }, 5: null, 6: null },
+                1: { 1: { subject: 'Практикум по электричеству и магнетизму (Лаб)', teacher: 'Колбатова А. И.', room: '45' }, 2: { subject: 'Практикум по электричеству и магнетизму (Лаб)', teacher: 'Колбатова А. И.', room: '45' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Финансово-экономический практикум (ПЗ: 07.10, 21.10, 04.12, 18.12)', teacher: 'Демина В. В.', room: '30' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 3: { subject: 'Векторный и тензорный анализ (ПЗ)', teacher: 'Хецева М. С.', room: '64' }, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: null, 3: { subject: 'Теория функции комплексного переменного (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 4: { subject: 'Общая физика. Электричество и магнетизм (ПЗ)', teacher: 'Ломакин А. И.', room: '55' }, 5: { subject: 'Профессиональная коммуникация на иностранном языке (ПЗ)', teacher: 'Бакун Н. В.', room: '8' }, 6: null },
+                4: { 1: { subject: 'Безопасность жизнедеятельности (ЛК)', teacher: '', room: '' }, 2: { subject: 'Общая физика. Электричество и магнетизм (ЛК)', teacher: 'Рябчун С. А.', room: '7' }, 3: { subject: 'Нормативно-правовые основы профессиональной деятельности (ПЗ: 23.09, 07.10, 21.10, 04.12, 18.12)', teacher: 'Поликашина О. В.', room: '58' }, 4: { subject: 'Безопасность жизнедеятельности (ПЗ)', teacher: '', room: '' }, 5: { subject: 'Дифференциальные уравнения (ПЗ)', teacher: 'Гладуш М. Г.', room: '54' }, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 301 ГРУППА ----
+    scheduleData['301'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Информационные системы (Лаб)', teacher: 'Федяева Е. М.', room: 'КГФ УИТ' }, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:30 – 12:40' }, 3: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Солдатенкова М. Д.', room: '56' }, 4: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Селезнев В. А.', room: '45' }, 5: null, 6: null },
+                1: { 1: { subject: 'Учебная практика (УП)', teacher: 'Саид М. М.', room: '' }, 2: { subject: 'Психология воспитательных практик (ЛК или ПЗ)', teacher: 'Киселева Т. Б.', room: '12' }, 3: { subject: 'Теоретическая физика (ЛК)', teacher: 'Чигирев А. Р.', room: '55' }, 4: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Чигирев А. Р.', room: '55' }, 5: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Чигирев А. Р.', room: '55' }, 6: null },
+                2: { 1: { subject: 'Физический практикум (Лаб)', teacher: 'Селезнев В. А.', room: '54, 47' }, 2: { subject: 'Физический практикум (Лаб)', teacher: 'Селезнев В. А.', room: '54, 47' }, 3: { subject: 'Педагогика (ЛК)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 4: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Пушкарева Ю. А.', room: '25' }, 5: null, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Чулкова Г. М.', room: '49' }, 3: { subject: 'Информационные системы (ЛК)', teacher: 'Федяева Е. М.', room: '56' }, 4: { subject: 'Информационные системы (Лаб)', teacher: 'Федяева Е. М.', room: '50' }, 5: { subject: 'Информационные системы (Лаб)', teacher: 'Федяева Е. М.', room: '50' }, 6: null },
+                5: { 1: null, 2: null, 3: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ЛК: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 4: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09, 10.10)', teacher: 'Егорова С. А.', room: '23' }, 5: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Физический практикум (Лаб)', teacher: 'Бакшеева К. А.', room: '54/47' }, 2: { subject: 'Физический практикум (Лаб)', teacher: 'Бакшеева К. А.', room: '54/47' }, 3: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Солдатенкова М. Д.', room: '56' }, 4: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Селезнев В. А.', room: '45' }, 5: null, 6: null },
+                1: { 1: { subject: 'Учебная практика (УП)', teacher: 'Саид М. М.', room: '' }, 2: { subject: 'Психология воспитательных практик (ЛК или ПЗ)', teacher: 'Киселева Т. Б.', room: '12' }, 3: { subject: 'Теоретическая физика (ЛК)', teacher: 'Чигирев А. Р.', room: '55' }, 4: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Чигирев А. Р.', room: '55' }, 5: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Чигирев А. Р.', room: '55' }, 6: null },
+                2: { 1: { subject: 'Информационные системы (Лаб)', teacher: 'Федяева Е. М.', room: 'КГФ' }, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:30 – 12:40' }, 3: { subject: 'Педагогика (ЛК)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 4: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Пушкарева Ю. А.', room: '25' }, 5: null, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Чулкова Г. М.', room: '49' }, 3: { subject: 'Информационные системы (ЛК)', teacher: 'Федяева Е. М.', room: '56' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ЛК: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 4: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09, 10.10)', teacher: 'Егорова С. А.', room: '23' }, 5: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Информационные системы (Лаб)', teacher: 'Федяева Е. М.', room: 'КГФ УИТ' }, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:30 – 12:40' }, 3: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Солдатенкова М. Д.', room: '56' }, 4: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Селезнев В. А.', room: '45' }, 5: null, 6: null },
+                1: { 1: { subject: 'Учебная практика (УП)', teacher: 'Саид М. М.', room: '' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Саид М. М.', room: '' }, 3: { subject: 'Теоретическая физика (ЛК)', teacher: 'Чигирев А. Р.', room: '55' }, 4: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Чигирев А. Р.', room: '55' }, 5: null, 6: { subject: 'Психология воспитательных практик (ЛК — 4 нед)', teacher: 'Киселева Т. Б.', room: 'дистанционно' } },
+                2: { 1: { subject: 'Физический практикум (Лаб)', teacher: 'Селезнев В. А.', room: '54, 47' }, 2: { subject: 'Физический практикум (Лаб)', teacher: 'Селезнев В. А.', room: '54, 47' }, 3: { subject: 'Методика обучения физике (ЛК)', teacher: 'Седельникова И. В.', room: '25' }, 4: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 5: null, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарев Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарев Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарев Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: { subject: 'Методика обучения физике (Лаб)', teacher: 'Степанов С. В.', room: '27' }, 2: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Чулкова Г. М.', room: '49' }, 3: { subject: 'Информационные системы (ЛК)', teacher: 'Федяева Е. М.', room: '56' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ЛК: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 4: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09, 10.10)', teacher: 'Егорова С. А.', room: '23' }, 5: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Физический практикум (Лаб)', teacher: 'Бакшеева К. А.', room: '54/47' }, 2: { subject: 'Физический практикум (Лаб)', teacher: 'Бакшеева К. А.', room: '54/47' }, 3: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Солдатенкова М. Д.', room: '56' }, 4: { subject: 'Общая и экспериментальная физика (Лаб)', teacher: 'Селезнев В. А.', room: '45' }, 5: null, 6: null },
+                1: { 1: { subject: 'Учебная практика (УП)', teacher: 'Саид М. М.', room: '' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Саид М. М.', room: '' }, 3: { subject: 'Теоретическая физика (ЛК)', teacher: 'Чигирев А. Р.', room: '55' }, 4: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Чигирев А. Р.', room: '55' }, 5: null, 6: { subject: 'Психология воспитательных практик (ЛК — 4 нед)', teacher: 'Киселева Т. Б.', room: 'дистанционно' } },
+                2: { 1: { subject: 'Информационные системы (Лаб)', teacher: 'Федяева Е. М.', room: 'КГФ' }, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:30 – 12:40' }, 3: { subject: 'Методика обучения физике (ЛК)', teacher: 'Седельникова И. В.', room: '25' }, 4: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 5: null, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарев Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарев Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарев Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: { subject: 'Методика обучения физике (Лаб)', teacher: 'Степанов С. В.', room: '27' }, 2: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Чулкова Г. М.', room: '49' }, 3: { subject: 'Информационные системы (ЛК)', teacher: 'Федяева Е. М.', room: '56' }, 4: { subject: 'Информационные системы (ПЗ)', teacher: 'Федяева Е. М.', room: '56' }, 5: { subject: 'Информационные системы (ПЗ)', teacher: 'Федяева Е. М.', room: '56' }, 6: null },
+                5: { 1: null, 2: null, 3: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ЛК: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 4: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09, 10.10)', teacher: 'Егорова С. А.', room: '23' }, 5: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 6: null }
+            }
+        }
+    };
+
+    // ---- 302 ГРУППА (НЕТ ПОДГРУПП) ----
+    scheduleData['302'] = {
+        type: 'standard',
+        subgroups: ['1'],
+        odd: {
+            '1': {
+                0: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+                1: { 1: { subject: 'Общая и экспериментальная физика (ЛК)', teacher: 'Селиверстов С. В.', room: '39' }, 2: { subject: 'Передовые производственные технологии (ПЗ)', teacher: 'Якушева Т. Г.', room: '56' }, 3: null, 4: null, 5: null, 6: null },
+                2: { 1: null, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:40 – 12:10' }, 3: { subject: 'Педагогика (ЛК)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 4: { subject: 'Педагогика (ПЗ)', teacher: 'Ямалетдинова Ф. М.', room: '23' }, 5: null, 6: null },
+                3: { 1: { subject: 'Учебная практика (УП)', teacher: 'Сапего И. П.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Сапего И. П.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Сапего И. П.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Информационные системы (Лаб)', teacher: 'Федяева Е. М.', room: '50' }, 3: { subject: 'Информационные системы (ЛК)', teacher: 'Федяева Е. М.', room: '50' }, 4: null, 5: null, 6: null },
+                5: { 1: { subject: 'Мехатроника и робототехника (ЛК)', teacher: 'Дульцев А.И.', room: '303' }, 2: { subject: 'Мехатроника и робототехника (Лаб)', teacher: 'Дульцев А.И.', room: '303' }, 3: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ЛК: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 4: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09, 10.10)', teacher: 'Егорова С. А.', room: '23' }, 5: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+                1: { 1: { subject: 'Общая и экспериментальная физика (ПЗ)', teacher: 'Селиверстов С. В.', room: '39' }, 2: { subject: 'Психология воспитательных практик (ЛК или ПЗ)', teacher: 'Киселева Т. Б.', room: '12' }, 3: { subject: 'Передовые производственные технологии (ЛК)', teacher: 'Якушева Т. Г.', room: '56' }, 4: null, 5: null, 6: { subject: 'Психология воспитательных практик (ЛК — 4 нед)', teacher: 'Киселева Т. Б.', room: 'дистанционно' } },
+                2: { 1: null, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:40 – 12:10' }, 3: { subject: 'Техническое творчество и основы проектирования (ЛК)', teacher: 'Латышев А. В.', room: 'ул. Усачева, 30' }, 4: { subject: 'Техническое творчество и основы проектирования (ПЗ)', teacher: 'Латышев А. В.', room: 'ул. Усачева, 30' }, 5: null, 6: null },
+                3: { 1: { subject: 'Учебная практика (УП)', teacher: 'Сапего И. П.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Сапего И. П.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Сапего И. П.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Информационные системы (Лаб)', teacher: 'Федяева Е. М.', room: '50' }, 3: { subject: 'Информационные системы (ЛК)', teacher: 'Федяева Е. М.', room: '50' }, 4: null, 5: null, 6: null },
+                5: { 1: { subject: 'Мехатроника и робототехника (Лаб)', teacher: 'Дульцев А.И.', room: '303' }, 2: { subject: 'Мехатроника и робототехника (Лаб)', teacher: 'Дульцев А.И.', room: '303' }, 3: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ЛК: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 4: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09, 10.10)', teacher: 'Егорова С. А.', room: '23' }, 5: { subject: 'Основы государственной политики в сфере межэтнических и межконфессиональных отношений (ПЗ: 12.09, 26.09)', teacher: 'Егорова С. А.', room: '23' }, 6: null }
+            }
+        }
+    };
+
+    // ---- 303 ГРУППА ----
+    scheduleData['303'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: null, 2: { subject: 'Тервер', teacher: 'Федянин Владимир Вячеславович', room: '62', type: 'lek-pz' }, 3: { subject: 'Лаба', teacher: 'Бакшеева Ксения Алексеевна', room: '47', type: 'laba' }, 4: { subject: 'Лаба', teacher: 'Бакшеева Ксения Алексеевна', room: '47', type: 'laba' }, 5: null, 6: null },
+                1: { 1: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'lek' }, 2: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'lek' }, 3: { subject: 'Электроника', teacher: 'Трифонов Андрей Васильевич', room: '56', type: 'pz' }, 4: { subject: 'Электроника', teacher: 'Трифонов Андрей Васильевич', room: '56', type: 'pz' }, 5: null, 6: null },
+                2: { 1: null, 2: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'lek' }, 3: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 4: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 5: null, 6: null },
+                3: { 1: { subject: 'Субатомная физика', teacher: 'Хецева Марина Сергеевна', room: '64', type: 'lek' }, 2: { subject: 'Субатомная физика', teacher: 'Хецева Марина Сергеевна', room: '64', type: 'lek-pz' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14"20 - 15:50' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 3: { subject: 'История физики', teacher: 'Казанцева Алла Борисовна', room: '54', type: 'pz' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: null, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:40 - 12:10'}, 3: { subject: 'Тервер', teacher: 'Федянин Владимир Вячеславович', room: '62', type: 'lek-pz' }, 4: { subject: 'Электроника', teacher: 'Трифонов Андрей Васильевич', room: '56', type: 'pz' }, 5: null, 6: null },
+                1: { 1: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'lek' }, 2: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'lek' }, 3: { subject: 'Электроника', teacher: 'Трифонов Андрей Васильевич', room: '56', type: 'pz' }, 4: null, 5: null, 6: null },
+                2: { 1: null, 2: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'lek' }, 3: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 4: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 5: null, 6: null },
+                3: { 1: { subject: 'Субатомная физика', teacher: 'Хецева Марина Сергеевна', room: '64', type: 'lek' }, 2: { subject: 'Субатомная физика', teacher: 'Хецева Марина Сергеевна', room: '64', type: 'lek-pz' }, 3: { subject: 'Лаба', teacher: 'Лобанов Юрий Валерьевич', room: '47', type: 'laba' }, 4: { subject: 'Лаба', teacher: 'Лобанов Юрий Валерьевич', room: '47', type: 'laba' }, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 3: { subject: 'История физики', teacher: 'Казанцева Алла Борисовна', room: '54', type: 'pz' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: null, 2: { subject: 'Тервер', teacher: 'Федянин Владимир Вячеславович', room: '62', type: 'lek-pz' }, 3: { subject: 'Лаба', teacher: 'Бакшеева Ксения Алексеевна', room: '47', type: 'laba' }, 4: { subject: 'Лаба', teacher: 'Бакшеева Ксения Алексеевна', room: '47', type: 'laba' }, 5: null, 6: null },
+                1: { 1: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'lek' }, 2: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'pz' }, 3: { subject: 'Электроника', teacher: 'Трифонов Андрей Васильевич', room: '56', type: 'pz' }, 4: { subject: 'Электроника', teacher: 'Трифонов Андрей Васильевич', room: '56', type: 'pz' }, 5: null, 6: null },
+                2: { 1: null, 2: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'lek' }, 3: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 4: { subject: 'ЕНКМ', teacher: 'Семенов Александр Владимирович', room: '13', type: 'lek-pz' }, 5: null, 6: null },
+                3: { 1: { subject: 'Субатомная физика', teacher: 'Хецева Марина Сергеевна', room: '64', type: 'lek' }, 2: { subject: 'Субатомная физика', teacher: 'Хецева Марина Сергеевна', room: '64', type: 'lek-pz' }, 3: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '14:20 – 15:50' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 3: { subject: 'История физики', teacher: 'Казанцева Алла Борисовна', room: '54', type: 'pz' }, 4: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'pz' }, 5: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'pz' }, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: null, 2: { subject: 'Физра', teacher: 'Ваш преподаватель', room: 'КГФ', type: 'fizra', time: '10:40 - 12:10' }, 3: { subject: 'Тервер', teacher: 'Федянин Владимир Вячеславович', room: '62', type: 'lek-pz' }, 4: { subject: 'Электроника', teacher: 'Трифонов Андрей Васильевич', room: '56', type: 'pz' }, 5: null, 6: null },
+                1: { 1: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'lek' }, 2: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'lek' }, 3: { subject: 'Электроника', teacher: 'Трифонов Андрей Васильевич', room: '56', type: 'pz' }, 4: null, 5: null, 6: null },
+                2: { 1: null, 2: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'lek' }, 3: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 4: { subject: 'ЕНКМ', teacher: 'Семенов Александр Владимирович', room: '13', type: 'lek-pz' }, 5: null, 6: null },
+                3: { 1: { subject: 'Субатомная физика', teacher: 'Хецева Марина Сергеевна', room: '64', type: 'lek' }, 2: { subject: 'Субатомная физика', teacher: 'Хецева Марина Сергеевна', room: '64', type: 'lek-pz' }, 3: { subject: 'Лаба', teacher: 'Лобанов Юрий Валерьевич', room: '47', type: 'laba' }, 4: { subject: 'Лаба', teacher: 'Лобанов Юрий Валерьевич', room: '47', type: 'laba' }, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Атомная физика', teacher: 'Казанцева Алла Борисовна', room: '56', type: 'pz' }, 3: { subject: 'История физики', teacher: 'Казанцева Алла Борисовна', room: '54', type: 'pz' }, 4: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'pz' }, 5: { subject: 'Электродинамика', teacher: 'Гладуш Максим Геннадьевич', room: '54', type: 'pz' }, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 401 ГРУППА ----
+    scheduleData['401'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: null, 2: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Косино О. А.', room: '402' }, 3: { subject: 'Электро и радиотехника (ЛК)', teacher: 'Окунев О. В.', room: '56' }, 4: { subject: 'Теоретическая физика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 5: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 6: null },
+                1: { 1: { subject: 'Компьютерное моделирование (ЛК)', teacher: 'Гоголданова К. В.', room: '402' }, 2: { subject: 'Методика обучения физике (ЛК)', teacher: 'Седельникова И. В.', room: '25' }, 3: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Седельникова И. В.', room: '25' }, 4: { subject: 'Теоретические основы информатики (ЛК)', teacher: 'Леонов В. Г.', room: '301' }, 5: { subject: 'Теоретические основы информатики (ПЗ)', teacher: 'Леонов В. Г.', room: '301' }, 6: null },
+                2: { 1: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: null, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '56' }, 4: { subject: 'Компьютерное моделирование (Лаб)', teacher: 'Гоголданова К. В.', room: '402' }, 5: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 6: null },
+                4: { 1: null, 2: { subject: 'Методика обучения физике (Лаб)', teacher: 'Степанов С. В.', room: '24' }, 3: { subject: 'Компьютерное моделирование с новыми программными пакетами (ПЗ)', teacher: 'Шураков А. С.', room: '606' }, 4: { subject: 'ВЕБ-Технологии (ЛК)', teacher: 'Парфенов С. Ю.', room: '402' }, 5: { subject: 'ВЕБ-Технологии (ПЗ)', teacher: 'Парфенов С. Ю.', room: '402' }, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: null, 2: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Косино О. А.', room: '402' }, 3: { subject: 'Электро и радиотехника (ЛК)', teacher: 'Окунев О. В.', room: '56' }, 4: { subject: 'Теоретическая физика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 5: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 6: null },
+                1: { 1: { subject: 'Компьютерное моделирование (ЛК)', teacher: 'Гоголданова К. В.', room: '402' }, 2: { subject: 'Методика обучения физике (ЛК)', teacher: 'Седельникова И. В.', room: '25' }, 3: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Седельникова И. В.', room: '25' }, 4: { subject: 'Теоретические основы информатики (ЛК)', teacher: 'Леонов В. Г.', room: '301' }, 5: { subject: 'Теоретические основы информатики (ПЗ)', teacher: 'Леонов В. Г.', room: '301' }, 6: null },
+                2: { 1: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Электро и радиотехника (Лаб)', teacher: 'Окунев О. В.', room: '48' }, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '56' }, 4: { subject: 'Компьютерное моделирование (Лаб)', teacher: 'Гоголданова К. В.', room: '402' }, 5: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 6: null },
+                4: { 1: null, 2: { subject: 'Методика обучения физике (Лаб)', teacher: 'Степанов С. В.', room: '24' }, 3: { subject: 'Компьютерное моделирование с новыми программными пакетами (ПЗ)', teacher: 'Шураков А. С.', room: '606' }, 4: { subject: 'ВЕБ-Технологии (ЛК)', teacher: 'Парфенов С. Ю.', room: '402' }, 5: { subject: 'ВЕБ-Технологии (ПЗ)', teacher: 'Парфенов С. Ю.', room: '402' }, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: null, 2: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Косино О. А.', room: '402' }, 3: { subject: 'Педагогическая риторика (ЛК или ПЗ)', teacher: 'Горбунова М. В.', room: '12' }, 4: { subject: 'Теоретическая физика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 5: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 6: null },
+                1: { 1: { subject: 'Компьютерное моделирование (ЛК)', teacher: 'Гоголданова К. В.', room: '402' }, 2: { subject: 'Компьютерное моделирование (ПЗ или Лаб)', teacher: 'Гоголданова К. В.', room: '402' }, 3: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Седельникова И. В.', room: '25' }, 4: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Седельникова И. В.', room: '25' }, 5: { subject: 'Теоретические основы информатики (ПЗ)', teacher: 'Леонов В. Г.', room: '301' }, 6: null },
+                2: { 1: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Электро и радиотехника (Лаб)', teacher: 'Окунев О. В.', room: '48' }, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '56' }, 4: { subject: 'Теоретические основы информатики (ЛК)', teacher: 'Леонов В. Г.', room: '301' }, 5: null, 6: null },
+                4: { 1: { subject: 'Методика обучения физике (Лаб) / Практикум по школьному физическому эксперименту (ПЗ)', teacher: 'Степанов С. В.', room: '24' }, 2: { subject: 'Практикум по школьному физическому эксперименту (ПЗ)', teacher: 'Степанов С. В.', room: '24' }, 3: { subject: 'Компьютерное моделирование с новыми программными пакетами (ЛК)', teacher: 'Шураков А. С.', room: '606' }, 4: { subject: 'ВЕБ-Технологии (ПЗ)', teacher: 'Парфенов С. Ю.', room: '402' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: null, 2: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Косино О. А.', room: '402' }, 3: { subject: 'Педагогическая риторика (ЛК или ПЗ)', teacher: 'Горбунова М. В.', room: '12' }, 4: { subject: 'Теоретическая физика (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 5: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Федянин В. В.', room: '62' }, 6: null },
+                1: { 1: { subject: 'Компьютерное моделирование (ЛК)', teacher: 'Гоголданова К. В.', room: '402' }, 2: { subject: 'Компьютерное моделирование (ПЗ или Лаб)', teacher: 'Гоголданова К. В.', room: '402' }, 3: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Седельникова И. В.', room: '25' }, 4: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Седельникова И. В.', room: '25' }, 5: { subject: 'Теоретические основы информатики (ПЗ)', teacher: 'Леонов В. Г.', room: '301' }, 6: null },
+                2: { 1: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Учебная практика (УП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                3: { 1: null, 2: null, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '56' }, 4: { subject: 'Теоретические основы информатики (ЛК)', teacher: 'Леонов В. Г.', room: '301' }, 5: null, 6: null },
+                4: { 1: { subject: 'Методика обучения физике (Лаб) / Практикум по школьному физическому эксперименту (ПЗ)', teacher: 'Степанов С. В.', room: '24' }, 2: { subject: 'Практикум по школьному физическому эксперименту (ПЗ)', teacher: 'Степанов С. В.', room: '24' }, 3: { subject: 'Компьютерное моделирование с новыми программными пакетами (ЛК)', teacher: 'Шураков А. С.', room: '606' }, 4: { subject: 'ВЕБ-Технологии (ПЗ)', teacher: 'Парфенов С. Ю.', room: '402' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 402 ГРУППА (НЕТ ПОДГРУПП) ----
+    scheduleData['402'] = {
+        type: 'standard',
+        subgroups: ['1'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Исакова Г. С.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Исакова Г. С.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Исакова Г. С.', room: '' }, 4: null, 5: null, 6: null },
+                1: { 1: { subject: 'Теоретические основы информатики (ПЗ)', teacher: 'Леонов В. Г.', room: '608' }, 2: { subject: 'Теоретические основы информатики (ЛК)', teacher: 'Леонов В. Г.', room: '608' }, 3: { subject: 'Организация проектной деятельности по технологии (ПЗ)', teacher: 'Макленкова С. Ю.', room: 'ул. Усачева, 30' }, 4: { subject: 'Организация проектной деятельности по технологии (ЛК)', teacher: 'Макленкова С. Ю.', room: 'ул. Усачева, 30' }, 5: null, 6: null },
+                2: { 1: { subject: '3D-моделирование и прототипирование (ЛК)', teacher: 'Гоголданова К. В.', room: '402' }, 2: { subject: '3D-моделирование и прототипирование (Лаб)', teacher: 'Гоголданова К. В.', room: '402' }, 3: { subject: 'Методика обучения и воспитания по профилю Технология (ПЗ)', teacher: 'Максимкина И. В.', room: 'ул. Усачева, 344АКК' }, 4: { subject: 'Естественнонаучная картина мира (ЛК или ПЗ)', teacher: 'Одинцова Н. И.', room: 'АКК 344АКК' }, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Косино О. А.', room: '402' }, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Косино О. А.', room: '402' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Электротехника и электроника (ЛК)', teacher: 'Рябов Б. А.', room: '303' }, 3: { subject: 'Веб-технологии (ПЗ)', teacher: 'Парфенов С. Ю.', room: '402' }, 4: { subject: 'Веб-технологии (ЛК)', teacher: 'Парфенов С. Ю.', room: '402' }, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Исакова Г. С.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Исакова Г. С.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Исакова Г. С.', room: '' }, 4: null, 5: null, 6: null },
+                1: { 1: { subject: 'Теоретические основы информатики (ПЗ)', teacher: 'Леонов В. Г.', room: '608' }, 2: { subject: 'Методика обучения и воспитания по профилю Технология (ЛК)', teacher: 'Вахтомина Е. А.', room: 'ул Усачева, 30' }, 3: { subject: 'Организация проектной деятельности по технологии (ПЗ)', teacher: 'Макленкова С. Ю.', room: 'ул. Усачева, 30' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: '3D-моделирование и прототипирование (Лаб)', teacher: 'Гоголданова К. В.', room: '402' }, 2: { subject: '3D-моделирование и прототипирование (Лаб)', teacher: 'Гоголданова К. В.', room: '402' }, 3: { subject: 'Методика обучения и воспитания по профилю Технология (ПЗ)', teacher: 'Максимкина И. В.', room: 'ул. Усачева, 344АКК' }, 4: { subject: 'Методика обучения и воспитания по профилю Технология (Лаб)', teacher: 'Максимкина И. В.', room: 'ул. Усачева, 344АКК' }, 5: null, 6: null },
+                3: { 1: null, 2: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Косино О. А.', room: '402' }, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Косино О. А.', room: '402' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Электротехника и электроника (Лаб)', teacher: 'Рябов Б. А.', room: '303' }, 3: { subject: 'Веб-технологии (ПЗ)', teacher: 'Парфенов С. Ю.', room: '402' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 403 ГРУППА (НЕТ ПОДГРУПП) ----
+    scheduleData['403'] = {
+        type: 'standard',
+        subgroups: ['1'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Взаимодействие с лицами с ОВЗ и с инвалидностью в социальной и профессиональной сферах (ЛК: 07.09, 14.09) / с 21.09 Статистическая физика (ЛК)', teacher: 'Залыгин А. В.', room: '56' }, 2: { subject: 'Взаимодействие с лицами с ОВЗ и с инвалидностью в социальной и профессиональной сферах (ПЗ: 07.09, 14.09, 21.09) / с 28.09 Статистическая физика (ЛК)', teacher: 'Залыгин А. В.', room: '56' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Полякова О. Н.', room: '' }, 4: { subject: 'Производственная практика (ПП)', teacher: 'Полякова О. Н.', room: '' }, 5: null, 6: null },
+                1: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Чулкова Г. М.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Чулкова Г. М.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Чулкова Г. М.', room: '' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Элементы релятивистской квантовой механики (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 2: { subject: 'Элементы релятивистской квантовой механики (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Введение в современную физику (ЛК)', teacher: 'Гольцман Г. Н.', room: '13' }, 4: { subject: 'Введение в современную физику (ПЗ)', teacher: 'Гольцман Г. Н.', room: '13' }, 5: null, 6: null },
+                3: { 1: { subject: 'Статистическая физика (ПЗ)', teacher: 'Стинская К. Б.', room: '56' }, 2: { subject: 'Субатомная физика (ЛК)', teacher: 'Бабурова О. В.', room: '56' }, 3: { subject: 'Субатомная физика (ЛК)', teacher: 'Хецева М. С.', room: '56' }, 4: { subject: 'Астрофизика и космология (ЛК или ПЗ)', teacher: 'Винник М. А.', room: 'АКК, 344' }, 5: { subject: 'Астрофизика и космология (ПЗ)', teacher: 'Винник М. А.', room: 'АКК, 344' }, 6: null },
+                4: { 1: { subject: 'Введение в квантовую теорию поля (ПЗ)', teacher: 'Рябчун С. А.', room: '7' }, 2: { subject: 'Физика современных материалов и наноматериалов (ПЗ)', teacher: 'Гайдученко И. А.', room: '64' }, 3: { subject: 'Физика современных материалов и наноматериалов (ЛК)', teacher: 'Гайдученко И. А.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Взаимодействие с лицами с ОВЗ и с инвалидностью в социальной и профессиональной сферах (ЛК: 07.09, 14.09) / с 21.09 Статистическая физика (ЛК)', teacher: 'Залыгин А. В.', room: '56' }, 2: { subject: 'Взаимодействие с лицами с ОВЗ и с инвалидностью в социальной и профессиональной сферах (ПЗ: 07.09, 14.09, 21.09) / с 28.09 Статистическая физика (ЛК)', teacher: 'Залыгин А. В.', room: '56' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Полякова О. Н.', room: '' }, 4: { subject: 'Производственная практика (ПП)', teacher: 'Полякова О. Н.', room: '' }, 5: null, 6: null },
+                1: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Чулкова Г. М.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Чулкова Г. М.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Чулкова Г. М.', room: '' }, 4: null, 5: null, 6: null },
+                2: { 1: { subject: 'Элементы релятивистской квантовой механики (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 2: { subject: 'Элементы релятивистской квантовой механики (ЛК)', teacher: 'Федянин В. В.', room: '62' }, 3: { subject: 'Введение в современную физику (ЛК)', teacher: 'Гольцман Г. Н.', room: '13' }, 4: { subject: 'Введение в современную физику (ПЗ)', teacher: 'Гольцман Г. Н.', room: '13' }, 5: null, 6: null },
+                3: { 1: { subject: 'Статистическая физика (ПЗ)', teacher: 'Стинская К. Б.', room: '56' }, 2: { subject: 'Субатомная физика (ЛК)', teacher: 'Бабурова О. В.', room: '56' }, 3: { subject: 'Субатомная физика (ЛК)', teacher: 'Хецева М. С.', room: '56' }, 4: { subject: 'Астрофизика и космология (ЛК или ПЗ)', teacher: 'Винник М. А.', room: 'АКК, 344' }, 5: { subject: 'Астрофизика и космология (ПЗ)', teacher: 'Винник М. А.', room: 'АКК, 344' }, 6: null },
+                4: { 1: { subject: 'Введение в квантовую теорию поля (ПЗ)', teacher: 'Рябчун С. А.', room: '7' }, 2: { subject: 'Физика современных материалов и наноматериалов (ПЗ)', teacher: 'Гайдученко И. А.', room: '64' }, 3: { subject: 'Физика современных материалов и наноматериалов (ЛК)', teacher: 'Гайдученко И. А.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 501 ГРУППА (НЕТ ПОДГРУПП) ----
+    scheduleData['501'] = {
+        type: 'standard',
+        subgroups: ['1'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Информационная безопасность и защита информации (ПЗ)', teacher: 'Гусин К. Ф.', room: '301' }, 2: { subject: 'Численные методы (ПЗ)', teacher: 'Мирзоев М. С.', room: '49' }, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '23' }, 4: { subject: 'Технологии искусственного интеллекта (ПЗ)', teacher: 'Харичева Д. Л.', room: '602' }, 5: { subject: 'Информационная безопасность и защита информации (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 6: null },
+                1: { 1: { subject: 'Астрономия (ЛК)', teacher: 'Королев М. Ю.', room: 'АКК, 244' }, 2: { subject: 'Теоретическая физика (ЛК)', teacher: 'Разумовская И. В.', room: 'АКК, 245' }, 3: { subject: 'Теоретическая физика (ЛК)', teacher: 'Разумовская И. В.', room: 'АКК, 245' }, 4: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Седельникова И. В.', room: '25' }, 5: { subject: 'Астрономия (ПЗ)', teacher: 'Петрова Е. Ю.', room: 'АКК 244' }, 6: null },
+                2: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: null, 4: null, 5: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Дульцев А. И.', room: 'дистанционно' }, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Хецева М. С.', room: '64' }, 3: { subject: 'Методика обучения физике (Лаб)', teacher: 'Степанов С. В.', room: '24' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Информационная безопасность и защита информации (ПЗ)', teacher: 'Гусин К. Ф.', room: '301' }, 2: { subject: 'Численные методы (ЛК)', teacher: 'Мирзоев М. С.', room: '49' }, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '23' }, 4: { subject: 'Технологии искусственного интеллекта (ПЗ)', teacher: 'Харичева Д. Л.', room: '602' }, 5: { subject: 'Информационная безопасность и защита информации (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 6: null },
+                1: { 1: { subject: 'Астрономия (ЛК)', teacher: 'Королев М. Ю.', room: 'АКК, 244' }, 2: { subject: 'Технологии искусственного интеллекта (ЛК)', teacher: 'Харичева Д. Л.', room: '602' }, 3: { subject: 'Теоретическая физика (ЛК)', teacher: 'Разумовская И. В.', room: 'АКК, 245' }, 4: null, 5: { subject: 'Астрономия (ПЗ)', teacher: 'Петрова Е. Ю.', room: 'АКК 244' }, 6: null },
+                2: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Гоголданова К. В.', room: '402' }, 4: { subject: 'Методика обучения физике (ПЗ)', teacher: 'Седельникова И. В.', room: '25' }, 5: null, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: null, 2: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Хецева М. С.', room: '64' }, 3: { subject: 'Теоретическая физика (ПЗ)', teacher: 'Хецева М. С.', room: '64' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- 502 ГРУППА ----
+    scheduleData['502'] = {
+        type: 'standard',
+        subgroups: ['1', '2'],
+        odd: {
+            '1': {
+                0: { 1: null, 2: null, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '23' }, 4: { subject: 'Основы технопредпринимательства (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 5: { subject: 'Информационная безопасность и защита информации (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 6: null },
+                1: { 1: { subject: 'Астрономия (ЛК)', teacher: 'Королев М. Ю.', room: 'АКК 244' }, 2: null, 3: { subject: 'Технологии искусственного интеллекта (ПЗ)', teacher: 'Харичева Д. Л.', room: '602' }, 4: { subject: 'Информационная безопасность и защита информации (ПЗ)', teacher: 'Гусин К. Ф.', room: '301' }, 5: { subject: 'Астрономия (ПЗ)', teacher: 'Петрова Е. Б.', room: 'АКК, 244' }, 6: null },
+                2: { 1: null, 2: { subject: 'Методика обучения и воспитания по профилю Технология (ЛК)', teacher: 'Вахтомина Е. А.', room: 'ул Усачева, 344' }, 3: { subject: 'Профессиональное самоопределение школьников (ЛК)', teacher: 'Сапего И. П.', room: 'ул Усачева, 30' }, 4: { subject: 'Профессиональное самоопределение школьников (ПЗ)', teacher: 'Сапего И. П.', room: 'ул Усачева, 30' }, 5: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Дульцев А. И.', room: 'дистанционно' }, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: null, 2: null, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '23' }, 4: { subject: 'Основы технопредпринимательства (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 5: { subject: 'Информационная безопасность и защита информации (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 6: null },
+                1: { 1: { subject: 'Астрономия (ЛК)', teacher: 'Королев М. Ю.', room: 'АКК 244' }, 2: null, 3: { subject: 'Информационная безопасность и защита информации (ПЗ)', teacher: 'Гусин К. Ф.', room: '301' }, 4: { subject: 'Технологии искусственного интеллекта (ПЗ)', teacher: 'Харичева Д. Л.', room: '602' }, 5: { subject: 'Астрономия (ПЗ)', teacher: 'Петрова Е. Б.', room: 'АКК, 244' }, 6: null },
+                2: { 1: null, 2: { subject: 'Методика обучения и воспитания по профилю Технология (ЛК)', teacher: 'Вахтомина Е. А.', room: 'ул Усачева, 344' }, 3: { subject: 'Профессиональное самоопределение школьников (ЛК)', teacher: 'Сапего И. П.', room: 'ул Усачева, 30' }, 4: { subject: 'Профессиональное самоопределение школьников (ПЗ)', teacher: 'Сапего И. П.', room: 'ул Усачева, 30' }, 5: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Дульцев А. И.', room: 'дистанционно' }, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Численные методы (ПЗ)', teacher: 'Мирзоев М. С.', room: '49' }, 2: { subject: 'Численные методы (ЛК)', teacher: 'Мирзоев М. С.', room: '49' }, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '23' }, 4: { subject: 'Основы технопредпринимательства (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 5: { subject: 'Информационная безопасность и защита информации (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 6: null },
+                1: { 1: { subject: 'Астрономия (ЛК)', teacher: 'Королев М. Ю.', room: 'АКК 244' }, 2: { subject: 'Технологии искусственного интеллекта (ЛК)', teacher: 'Харичева Д. Л.', room: '602' }, 3: { subject: 'Технологии искусственного интеллекта (ПЗ)', teacher: 'Харичева Д. Л.', room: '602' }, 4: { subject: 'Информационная безопасность и защита информации (ПЗ)', teacher: 'Гусин К. Ф.', room: '301' }, 5: { subject: 'Астрономия (ПЗ)', teacher: 'Петрова Е. Б.', room: 'АКК, 244' }, 6: null },
+                2: { 1: { subject: 'Методика обучения и воспитания по профилю Технология (ПЗ)', teacher: 'Сапего И. П.', room: 'ул Усачева, 30' }, 2: { subject: 'Методика обучения и воспитания по профилю Технология (ЛК)', teacher: 'Вахтомина Е. А.', room: 'ул Усачева, 344' }, 3: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Гоголданова К. В.', room: '402' }, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            },
+            '2': {
+                0: { 1: { subject: 'Численные методы (ПЗ)', teacher: 'Мирзоев М. С.', room: '49' }, 2: { subject: 'Численные методы (ЛК)', teacher: 'Мирзоев М. С.', room: '49' }, 3: { subject: 'Методика обучения информатике (ЛК)', teacher: 'Абдулгалимов Г. Л.', room: '23' }, 4: { subject: 'Основы технопредпринимательства (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 5: { subject: 'Информационная безопасность и защита информации (ЛК)', teacher: 'Гусин К. Ф.', room: '301' }, 6: null },
+                1: { 1: { subject: 'Астрономия (ЛК)', teacher: 'Королев М. Ю.', room: 'АКК 244' }, 2: { subject: 'Технологии искусственного интеллекта (ЛК)', teacher: 'Харичева Д. Л.', room: '602' }, 3: { subject: 'Информационная безопасность и защита информации (ПЗ)', teacher: 'Гусин К. Ф.', room: '301' }, 4: { subject: 'Технологии искусственного интеллекта (ПЗ)', teacher: 'Харичева Д. Л.', room: '602' }, 5: { subject: 'Астрономия (ПЗ)', teacher: 'Петрова Е. Б.', room: 'АКК, 244' }, 6: null },
+                2: { 1: { subject: 'Методика обучения и воспитания по профилю Технология (ПЗ)', teacher: 'Максимкина И. В.', room: 'ул Усачева, 344' }, 2: { subject: 'Методика обучения и воспитания по профилю Технология (ЛК)', teacher: 'Вахтомина Е. А.', room: 'ул Усачева, 344' }, 3: { subject: 'Методика обучения информатике (ПЗ)', teacher: 'Гоголданова К. В.', room: '402' }, 4: null, 5: null, 6: null },
+                3: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                4: { 1: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 2: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 3: { subject: 'Производственная практика (ПП)', teacher: 'Пушкарева Ю. А.', room: '' }, 4: null, 5: null, 6: null },
+                5: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null }
+            }
+        }
+    };
+
+    // ---- МАГИСТРАТУРА ----
+    // М101
+    scheduleData['М101'] = {
+        type: 'master',
+        subgroups: ['1'],
+        odd: {
+            '1': {
+                0: { 1: null, 2: null, 3: null },
+                1: { 1: { subject: 'Философия научного познания (ПЗ)', teacher: 'Князев В. Н.', room: '13' }, 2: { subject: 'Новые производственные технологии (ПЗ) с 08.09 по 20.10: Гусин К. Ф., 49 / с 27.10 по 22.12: Гоголданова К. В., 402', teacher: '', room: '' }, 3: { subject: 'Новые производственные технологии (ПЗ) с 08.09 по 20.10: Гусин К. Ф., 49 / с 27.10 по 22.12: Гоголданова К. В., 402', teacher: '', room: '' } },
+                2: { 1: { subject: 'Производственная практика', teacher: '', room: '' }, 2: { subject: 'Производственная практика', teacher: '', room: '' }, 3: { subject: 'Производственная практика', teacher: '', room: '' } },
+                3: { 1: { subject: 'Методика обучения цифровым (сквозным) технологиям (ЛК или ПЗ)', teacher: 'Абдулгалимов Г. Л. или Косино О. А.', room: '' }, 2: { subject: 'Физические основы цифровой техники и робототехники (ПЗ)', teacher: 'Степанов С. В.', room: '24/402' }, 3: { subject: 'Иностранный язык для специальных целей (ПЗ)', teacher: 'Борунова Е. Б.', room: '12' } },
+                4: { 1: null, 2: null, 3: null },
+                5: { 1: { subject: '10:00-13:00 Компоненты робототехники и сенсорики (ЛК или ПЗ) Вагин Е. А., 402 с 12.09 по 17.10; 10:00-15:00 Компоненты робототехники и сенсорики (ПЗ) Вагин Е. А., 402 24.10; 10:00-15:00 Технологии виртуальной и дополненной реальностей (ЛК или ПЗ) Ольховая О. М., 203 31.10, 07.11, 28.11, 05.12', teacher: '', room: '' }, 2: null, 3: null, 4: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: null, 2: null, 3: null },
+                1: { 1: null, 2: { subject: 'Философия научного познания (ЛК)', teacher: 'Князев В. Н.', room: 'дистанционно' }, 3: { subject: 'Новые производственные технологии (ЛК) с 08.09 по 29.09', teacher: 'Абдулгалимов Г. Л.', room: 'дистанционно' } },
+                2: { 1: { subject: 'Производственная практика', teacher: '', room: '' }, 2: { subject: 'Производственная практика', teacher: '', room: '' }, 3: { subject: 'Производственная практика', teacher: '', room: '' } },
+                3: { 1: { subject: 'Методика обучения цифровым (сквозным) технологиям (ПЗ)', teacher: 'Косино О. А.', room: '' }, 2: { subject: 'Физические основы цифровой техники и робототехники (ПЗ)', teacher: 'Степанов С. В.', room: '24/402' }, 3: { subject: 'Иностранный язык для специальных целей (ПЗ)', teacher: 'Борунова Е. Б.', room: '12' } },
+                4: { 1: null, 2: null, 3: null },
+                5: { 1: { subject: '10:00-13:00 Компоненты робототехники и сенсорики (ЛК или ПЗ) Вагин Е. А., 402 с 12.09 по 17.10; 10:00-15:00 Компоненты робототехники и сенсорики (ПЗ) Вагин Е. А., 402 24.10; 10:00-15:00 Технологии виртуальной и дополненной реальностей (ЛК или ПЗ) Ольховая О. М., 203 31.10, 07.11, 28.11, 05.12', teacher: '', room: '' }, 2: null, 3: null, 4: null }
+            }
+        }
+    };
+
+    // М102
+    scheduleData['М102'] = {
+        type: 'master',
+        subgroups: ['1'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Учебная практика', teacher: '', room: '' }, 2: null, 3: null },
+                1: { 1: { subject: 'Иностранный язык для специальных целей (14:00-15:30)', teacher: 'Пурышева Н. С.', room: 'дистанционно' }, 2: { subject: 'Философия научного познания (ПЗ)', teacher: 'Князев В. Н.', room: '13' }, 3: { subject: 'Инновационные процессы в образовании (ЛК)', teacher: 'Светич Е. Г.', room: '23' } },
+                2: { 1: { subject: 'Педагогика и психология профессионального образования (ПЗ)', teacher: 'Прояненкова Л. А.', room: '203 / дистанционно' }, 2: { subject: 'Педагогика и психология профессионального образования (ПЗ)', teacher: 'Прояненкова Л. А.', room: '203 / дистанционно' }, 3: null },
+                3: { 1: { subject: 'Производственная практика', teacher: '', room: '' }, 2: null, 3: null },
+                4: { 1: { subject: 'Мультимедийная дидактика (ПЗ или ЛК)', teacher: 'Лозовенко С. В.', room: '401' }, 2: { subject: 'Инновационные процессы в образовании (ПЗ) 18:30-21:00', teacher: 'Светич Е. Г.', room: '23' }, 3: null }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Учебная практика', teacher: '', room: '' }, 2: null, 3: null },
+                1: { 1: { subject: 'Иностранный язык для специальных целей (15:00-16:45)', teacher: 'Пурышева Н. С.', room: 'дистанционно' }, 2: { subject: 'Философия научного познания (ЛК)', teacher: 'Князев В. Н.', room: 'дистанционно' }, 3: null },
+                2: { 1: { subject: 'Педагогика и психология профессионального образования (ПЗ)', teacher: 'Прояненкова Л. А.', room: '203 / дистанционно' }, 2: { subject: 'Организация проектно-исследовательской деятельности школьников (ЛК)', teacher: 'Прояненкова Л. А.', room: '293 / дистанционно' }, 3: null },
+                3: { 1: { subject: 'Производственная практика', teacher: '', room: '' }, 2: null, 3: null },
+                4: { 1: { subject: 'Мультимедийная дидактика (ПЗ или ЛК)', teacher: 'Лозовенко С. В.', room: '401' }, 2: { subject: 'Мультимедийная дидактика (ПЗ или ЛК) 18:30-21:00', teacher: 'Лозовенко С. В.', room: '401' }, 3: null }
+            }
+        }
+    };
+
+    // М201
+    scheduleData['М201'] = {
+        type: 'master',
+        subgroups: ['1'],
+        odd: {
+            '1': {
+                0: { 1: { subject: 'Академическая риторика (ПЗ)', teacher: 'Горбунова М. В.', room: '12' }, 2: { subject: 'Технологии распределенного реестра (ПЗ)', teacher: 'Харичева Д. Л.', room: '50' }, 3: { subject: 'Лабораторное оборудование в детском технопарке (ЛК)', teacher: 'Саид М. М.', room: '401' } },
+                1: { 1: null, 2: null, 3: null },
+                2: { 1: null, 2: null, 3: null },
+                3: { 1: null, 2: { subject: 'Технологии беспроводной связи (ЛК)', teacher: 'Леонов В. Г.', room: '608' }, 3: { subject: 'Физические основы цифровой техники и робототехники (ЛК/ПЗ)', teacher: 'Степанов С. В.', room: '24' } },
+                4: { 1: null, 2: null, 3: null },
+                5: { 1: { subject: '13:15-14:50 Компоненты робототехники и сенсорики (ПЗ) с 01.09 по 17.10: Вагин Е. А., 402 / с 07.11 по 26.12: Дульцев А. И., 402', teacher: '', room: '' }, 2: { subject: '15:00-16:35 Компоненты робототехники и сенсорики (ЛК) с 12.09 по 03.10: Вагин Е. А., 402 / Технологии виртуальной и дополненной реальностей (ЛК) 14.11, 21.11: Ольховая О. М., 203', teacher: '', room: '' }, 3: { subject: '16:45-18:20 Технологии виртуальной и дополненной реальностей (ЛК) 14.11, 21.11: Ольховая О. М., 293 / 15:00-18:20 Технологии виртуальной и дополненной реальностей (ЛК) с 28.11 по 19.12: Ольховая О. М., 293', teacher: '', room: '' } }
+            }
+        },
+        even: {
+            '1': {
+                0: { 1: { subject: 'Академическая риторика (ПЗ)', teacher: 'Горбунова М. В.', room: '12' }, 2: { subject: 'Технологии распределенного реестра (ПЗ)', teacher: 'Харичева Д. Л.', room: '50' }, 3: { subject: 'Лабораторное оборудование в детском технопарке (ПЗ)', teacher: 'Саид М. М.', room: '401' } },
+                1: { 1: null, 2: null, 3: null },
+                2: { 1: null, 2: null, 3: null },
+                3: { 1: null, 2: { subject: 'Технологии беспроводной связи (ПЗ)', teacher: 'Леонов В. Г.', room: '608' }, 3: { subject: 'Физические основы цифровой техники и робототехники (ЛК/ПЗ)', teacher: 'Степанов С. В.', room: '24' } },
+                4: { 1: null, 2: null, 3: null },
+                5: { 1: { subject: '11:00-12:35 Социальное взаимодействие в поликультурном обществе', teacher: 'Егорова С. А.', room: '23' }, 2: { subject: '13:15-14:50 Компоненты робототехники и сенсорики (ПЗ) с 01.09 по 17.10: Вагин Е. А., 402 / с 07.11 по 26.12: Дульцев А. И., 402', teacher: '', room: '' }, 3: { subject: '15:00-16:35 Компоненты робототехники и сенсорики (ЛК) с 12.09 по 03.10: Вагин Е. А., 402 / Технологии виртуальной и дополненной реальностей (ЛК) 14.11, 21.11: Ольховая О. М., 203', teacher: '', room: '' } }
+            }
+        }
+    };
+
+    // ==================================================
+    // ОПРЕДЕЛЕНИЕ ТИПА ЗАНЯТИЯ
+    // ==================================================
+    function detectType(subject) {
+        if (!subject) return '';
+        var s = subject.toLowerCase();
+        if (s.indexOf('физра') !== -1 || s.indexOf('физическая культура') !== -1) return 'fizra';
+        if (s.indexOf('лаборатор') !== -1 || s.indexOf('(лаб)') !== -1) return 'laba';
+        if (s.indexOf('лекция') !== -1 || s.indexOf('(лк)') !== -1) return 'lek';
+        if (s.indexOf('семинар') !== -1 || s.indexOf('(пз)') !== -1) return 'pz';
+        if (s.indexOf('лекция + семинар') !== -1) return 'lek-pz';
+        return '';
+    }
+
+    function getTypeBadge(type) {
+        var map = {
+            'lek': 'Лекция', 'pz': 'Семинар', 'laba': 'Лабораторная',
+            'lek-pz': 'Лекция + Семинар', 'fizra': 'Физкультура'
+        };
+        return map[type] || '';
+    }
+
+    // ==================================================
+    // РЕНДЕР РАСПИСАНИЯ
+    // ==================================================
+    function renderSchedule() {
+        var container = document.getElementById('pairsContainer');
+        if (!container) return;
+
+        var weekLabel = currentWeek === 'odd' ? 'Нечетная' : 'Четная';
+        var dayTitle = document.getElementById('dayTitle');
+        if (dayTitle) {
+            dayTitle.innerHTML = dayNames[currentDay] + ' <span class="badge" id="weekBadge">' + weekLabel + '</span>';
+        }
+
+        var groupData = scheduleData[currentGroup];
+        if (!groupData) {
+            container.innerHTML = '<div class="pair-card empty"><div class="pair-subject">Данные для группы не найдены</div></div>';
+            return;
+        }
+
+        var isMaster = groupData.type === 'master';
+        var slots = isMaster ? (currentDay === 5 ? timeSlotsMasterSat : timeSlotsMaster) : timeSlots;
+
+        var weekKey = currentWeek === 'odd' ? 'odd' : 'even';
+        var dayData = (groupData[weekKey] &&
+                       groupData[weekKey][currentSubgroup] &&
+                       groupData[weekKey][currentSubgroup][currentDay]) || {};
+
+        var nowPairNum = getCurrentPairNum();
+
+        var html = '';
+        for (var i = 0; i < slots.length; i++) {
+            var slot = slots[i];
+            var pairData = dayData[slot.num];
+
+            if (pairData && pairData.subject) {
+                var displayName = pairData.subject;
+                var teacher = pairData.teacher || '';
+                var room = pairData.room || '';
+                var type = pairData.type || detectType(displayName);
+                var typeClass = type ? 'type-' + type : '';
+                var typeBadge = type ? '<span class="type-badge">' + getTypeBadge(type) + '</span>' : '';
+                var isNow = (slot.num === nowPairNum) && (currentDay === getTodayDayIndex()) && (currentWeek === getAutoWeek());
+                var nowBadge = isNow ? '<div class="now-badge">Сейчас идёт</div>' : '';
+                var cardClass = 'pair-card ' + typeClass + (isNow ? ' now' : '');
+
+                var datesText = '';
+                var dateMatch = displayName.match(/\((ЛК:.*?ПЗ:.*?)\)/);
+                if (dateMatch) {
+                    datesText = dateMatch[1];
+                    displayName = displayName.replace('(' + dateMatch[1] + ')', '').replace(/,\s*$/, '').trim();
+                }
+
+                var roomHtml = room ? '<div class="pair-meta-row"><img src="/icons/pin.svg" alt="" onerror="this.outerHTML=\'📍\'"><span class="room-pill">' + room + '</span></div>' : '';
+                var teacherHtml = teacher ? '<div class="pair-meta-row"><img src="/icons/man.svg" alt="" onerror="this.outerHTML=\'👤\'"><span>' + teacher + '</span></div>' : '';
+
+                html += '<div class="' + cardClass + '" style="animation-delay:' + (i * 0.04) + 's">' +
+                    nowBadge +
+                    '<div class="pair-head">' +
+                        '<img src="/icons/hat.svg" alt="" onerror="this.outerHTML=\'🎓\'">' +
+                        '<span class="time">' + slot.time + '</span>' +
+                        '<button class="pair-menu-btn" onclick="togglePairMenu(this)" aria-label="Действия">⋮</button>' +
+                    '</div>' +
+                    '<div class="pair-subject">' + displayName + '</div>' +
+                    typeBadge +
+                    '<div class="pair-meta">' +
+                        teacherHtml +
+                        roomHtml +
+                        (datesText ? '<div class="subj-dates">📅 ' + datesText + '</div>' : '') +
+                    '</div>' +
+                    '<div class="pair-actions">' +
+                        '<button onclick="shareSchedule()">🔗 Поделиться</button>' +
+                        '<button onclick="addToCalendar(\'' + escapeAttr(displayName) + '\',\'' + escapeAttr(teacher) + '\',\'' + escapeAttr(room) + '\')">📅 В календарь</button>' +
+                    '</div>' +
+                '</div>';
+            } else {
+                html += '<div class="pair-card empty" style="animation-delay:' + (i * 0.04) + 's">' +
+                    '<div class="pair-head">' +
+                        '<img src="/icons/window.svg" alt="" onerror="this.outerHTML=\'📅\'">' +
+                        '<span class="time">' + slot.time + '</span>' +
+                    '</div>' +
+                    '<div class="pair-subject">ОКНО</div>' +
+                '</div>';
+            }
+        }
+
+        container.innerHTML = html;
+    }
+
+    function escapeAttr(s) {
+        return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    // ==================================================
+    // «СЕЙЧАС ИДЁТ»
+    // ==================================================
+    function getCurrentPairNum() {
+        var now = new Date();
+        var cur = now.getHours() * 60 + now.getMinutes();
+        var bells = [
+            { num: 1, start: 9*60+15,  end: 10*60+50 },
+            { num: 2, start: 11*60+0,  end: 12*60+35 },
+            { num: 3, start: 13*60+15, end: 14*60+50 },
+            { num: 4, start: 15*60+0,  end: 16*60+35 },
+            { num: 5, start: 16*60+45, end: 18*60+20 },
+            { num: 6, start: 18*60+30, end: 20*60+5  }
+        ];
+        for (var i = 0; i < bells.length; i++) {
+            if (cur >= bells[i].start && cur <= bells[i].end) return bells[i].num;
+        }
+        return -1;
+    }
+
+    function getTodayDayIndex() {
+        var d = new Date().getDay();
+        if (d === 0) return -1;
+        return d - 1;
+    }
+
+    // ==================================================
+    // ПОДЕЛИТЬСЯ
+    // ==================================================
+    function shareSchedule() {
+        var url = location.origin + location.pathname +
+            '?group=' + encodeURIComponent(currentGroup) +
+            '&sub=' + encodeURIComponent(currentSubgroup) +
+            '&week=' + currentWeek +
+            '&day=' + currentDay;
+
+        if (navigator.share) {
+            navigator.share({
+                title: 'Расписание ИФТИС',
+                text: 'Расписание группы ' + currentGroup,
+                url: url
+            }).catch(function() {});
+        } else {
+            navigator.clipboard.writeText(url).then(function() {
+                showToast('Ссылка скопирована 🔗');
+            }).catch(function() {
+                prompt('Скопируйте ссылку:', url);
+            });
+        }
+    }
+
+    function showToast(msg) {
+        var t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(function() { t.classList.remove('show'); }, 2200);
+    }
+
+    // ==================================================
+    // КАЛЕНДАРЬ
+    // ==================================================
+    function addToCalendar(subject, teacher, room) {
+        var url = 'https://www.google.com/calendar/render?action=TEMPLATE' +
+            '&text=' + encodeURIComponent(subject) +
+            '&details=' + encodeURIComponent(teacher + ' · ауд. ' + room);
+        window.open(url, '_blank');
+    }
+
+    // ==================================================
+    // МЕНЮ ДЕЙСТВИЙ
+    // ==================================================
+    function togglePairMenu(btn) {
+        var actions = btn.closest('.pair-card').querySelector('.pair-actions');
+        actions.classList.toggle('open');
+    }
+
+    // ==================================================
+    // ВЫБОР ГРУППЫ
+    // ==================================================
+    function toggleMenu() {
+        document.getElementById('groupMenu').classList.toggle('open');
+    }
+
+    function selectGroup(group) {
+        if (!scheduleData[group]) return;
+        currentGroup = group;
+        document.getElementById('groupDisplay').textContent = group;
+
+        var btns = document.querySelectorAll('.dropdown button');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].classList.remove('active-group');
+            if (btns[i].textContent === group) btns[i].classList.add('active-group');
+        }
+        document.getElementById('groupMenu').classList.remove('open');
+
+        try { localStorage.setItem('mpgu_group', group); } catch(e) {}
+
+        updateSubgroups();
+        renderSchedule();
+        updateURL();
+    }
+
+    function updateSubgroups() {
+        var subgroups = scheduleData[currentGroup].subgroups;
+        var selector = document.getElementById('subgroupSelector');
+        var btns = selector.querySelectorAll('button');
+
+        if (subgroups.length === 1) {
+            selector.classList.add('hidden');
+            currentSubgroup = subgroups[0];
+        } else {
+            selector.classList.remove('hidden');
+            for (var i = 0; i < btns.length; i++) {
+                var num = i + 1;
+                if (num <= subgroups.length) {
+                    btns[i].style.display = 'inline-block';
+                    btns[i].textContent = num + ' подгруппа';
+                } else {
+                    btns[i].style.display = 'none';
+                }
+                btns[i].classList.remove('active');
+                if (btns[i].textContent === currentSubgroup + ' подгруппа') {
+                    btns[i].classList.add('active');
+                }
+            }
+        }
+    }
+
+    function switchSubgroup(sg) {
+        currentSubgroup = sg;
+        var btns = document.querySelectorAll('.subgroup-selector button');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].classList.remove('active');
+            if (btns[i].textContent === sg + ' подгруппа') btns[i].classList.add('active');
+        }
+        renderSchedule();
+        updateURL();
+    }
+
+    // ==================================================
+    // НЕДЕЛЯ
+    // ==================================================
+    function switchWeek(week) {
+        autoWeek = false;
+        currentWeek = week;
+        updateWeekButtons();
+        renderSchedule();
+        updateURL();
+    }
+
+    function toggleAutoWeek() {
+        autoWeek = !autoWeek;
+        if (autoWeek) currentWeek = getAutoWeek();
+        updateWeekButtons();
+        renderSchedule();
+        updateURL();
+    }
+
+    function updateWeekButtons() {
+        var oddBtn = document.getElementById('weekOdd');
+        var evenBtn = document.getElementById('weekEven');
+        var autoBtn = document.getElementById('weekAuto');
+
+        oddBtn.classList.remove('active');
+        evenBtn.classList.remove('active');
+        autoBtn.classList.remove('active-auto');
+
+        if (autoWeek) {
+            autoBtn.classList.add('active-auto');
+            if (currentWeek === 'odd') oddBtn.classList.add('active');
+            else evenBtn.classList.add('active');
+        } else {
+            if (currentWeek === 'odd') oddBtn.classList.add('active');
+            else evenBtn.classList.add('active');
+        }
+    }
+
+    function getAutoWeek() {
+        var now = new Date();
+        var start = new Date(2026, 8, 1);
+        var diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        var weekNum = Math.floor(diff / 7) + 1;
+        return (weekNum % 2 === 1) ? 'odd' : 'even';
+    }
+
+    // ==================================================
+    // ДЕНЬ
+    // ==================================================
+    function switchDay(day) {
+        currentDay = day;
+        var btns = document.querySelectorAll('.day-btn');
+        for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+        if (btns[day]) btns[day].classList.add('active');
+        renderSchedule();
+        updateURL();
+    }
+
+    function goToday() {
+        var d = getTodayDayIndex();
+        currentDay = d >= 0 ? d : 0;
+        currentWeek = getAutoWeek();
+        autoWeek = true;
+        updateWeekButtons();
+
+        var btns = document.querySelectorAll('.day-btn');
+        for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+        if (btns[currentDay]) btns[currentDay].classList.add('active');
+
+        renderSchedule();
+        updateURL();
+        showToast('Сегодня: ' + dayNames[currentDay]);
+    }
+
+    // ==================================================
+    // URL
+    // ==================================================
+    function updateURL() {
+        if (!history.replaceState) return;
+        var params = '?group=' + encodeURIComponent(currentGroup) +
+            '&sub=' + encodeURIComponent(currentSubgroup) +
+            '&week=' + currentWeek +
+            '&day=' + currentDay;
+        try { history.replaceState(null, '', params); } catch(e) {}
+    }
+
+    function readURL() {
+        try {
+            var p = new URLSearchParams(location.search);
+            var g = p.get('group');
+            var s = p.get('sub');
+            var w = p.get('week');
+            var d = p.get('day');
+
+            if (g && scheduleData[g]) currentGroup = g;
+            if (s) currentSubgroup = s;
+            if (w === 'odd' || w === 'even') { currentWeek = w; autoWeek = false; }
+            if (d !== null && !isNaN(parseInt(d))) currentDay = parseInt(d);
+        } catch(e) {}
+    }
+
+    // ==================================================
+    // НАСТРОЙКИ
+    // ==================================================
+    function openSettings() {
+        updateThemeButtons();
+        document.getElementById('settingsModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSettings(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('settingsModal').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function setThemeAndUpdate(theme) {
+        if (theme === 'auto') {
+            try { localStorage.removeItem('mpgu_theme'); } catch(e) {}
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(prefersDark ? 'dark' : 'light');
+        } else {
+            setTheme(theme);
+        }
+        updateThemeButtons();
+        showToast(theme === 'dark' ? '🌙 Тёмная тема' :
+                  theme === 'light' ? '☀️ Светлая тема' :
+                  '🔄 Системная тема');
+    }
+
+    function updateThemeButtons() {
+        var saved = null;
+        try { saved = localStorage.getItem('mpgu_theme'); } catch(e) {}
+        var current = saved || 'auto';
+
+        var btns = document.querySelectorAll('.theme-option');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].classList.remove('active');
+            if (btns[i].getAttribute('data-theme') === current) {
+                btns[i].classList.add('active');
+            }
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            var modal = document.getElementById('settingsModal');
+            if (modal && modal.classList.contains('open')) closeSettings();
+        }
+    });
+
+    // ==================================================
+    // ТЕМА
+    // ==================================================
+    function setTheme(theme) {
+        if (theme === 'dark') document.body.classList.add('dark');
+        else document.body.classList.remove('dark');
+        try { localStorage.setItem('mpgu_theme', theme); } catch(e) {}
+
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', theme === 'dark' ? '#0a0a0f' : '#ffffff');
+    }
+
+    function initTheme() {
+        var saved = null;
+        try { saved = localStorage.getItem('mpgu_theme'); } catch(e) {}
+
+        if (saved === 'dark' || saved === 'light') {
+            setTheme(saved);
+        } else {
+            var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            setTheme(prefersDark ? 'dark' : 'light');
+        }
+
+        if (window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                var saved2 = null;
+                try { saved2 = localStorage.getItem('mpgu_theme'); } catch(err) {}
+                if (!saved2) {
+                    if (e.matches) document.body.classList.add('dark');
+                    else document.body.classList.remove('dark');
+                }
+            });
+        }
+    }
+
+    // ==================================================
+    // КНОПКА НАВЕРХ
+    // ==================================================
+    window.addEventListener('scroll', function() {
+        var btn = document.getElementById('scrollTop');
+        if (window.scrollY > 300) btn.classList.add('visible');
+        else btn.classList.remove('visible');
+    });
+
+    // ==================================================
+    // АДМИН
+    // ==================================================
+    function openAdminLogin() {
+        // Сбрасываем форму в исходное состояние
+        document.getElementById('adminLoginForm').style.display = 'block';
+        document.getElementById('adminEditPanel').style.display = 'none';
+        document.getElementById('adminModalTitle').textContent = 'Вход для администратора';
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminError').classList.remove('show');
+        document.getElementById('adminPassword').type = 'password';
+
+        document.getElementById('adminModal').classList.add('open');
+        document.body.style.overflow = 'hidden';
+
+        setTimeout(function() {
+            document.getElementById('adminPassword').focus();
+        }, 300);
+    }
+
+    function closeAdminModal(event) {
+        if (event && event.target !== event.currentTarget) return;
+        document.getElementById('adminModal').classList.remove('open');
+        // Возвращаем overflow только если модалка настроек тоже закрыта
+        var settingsModal = document.getElementById('settingsModal');
+        if (!settingsModal.classList.contains('open')) {
+            document.body.style.overflow = '';
+        }
+    }
+
+    function tryAdminLogin() {
+        var input = document.getElementById('adminPassword');
+        var error = document.getElementById('adminError');
+        var value = input.value;
+
+        if (value === ADMIN_PASSWORD) {
+            isAdmin = true;
+            error.classList.remove('show');
+            // Показываем раздел редактирования (заглушка)
+            document.getElementById('adminLoginForm').style.display = 'none';
+            document.getElementById('adminEditPanel').style.display = 'block';
+            document.getElementById('adminModalTitle').textContent = 'Редактирование';
+            showToast('Вы вошли как администратор');
+        } else {
+            error.classList.add('show');
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    // ==================================================
+    // ИНИЦИАЛИЗАЦИЯ
+    // ==================================================
+    (function init() {
+        initTheme();
+
+        try {
+            var saved = localStorage.getItem('mpgu_group');
+            if (saved && scheduleData[saved]) currentGroup = saved;
+        } catch(e) {}
+
+        readURL();
+
+        document.getElementById('groupDisplay').textContent = currentGroup;
+
+        var btns = document.querySelectorAll('.dropdown button');
+        for (var i = 0; i < btns.length; i++) {
+            btns[i].classList.remove('active-group');
+            if (btns[i].textContent === currentGroup) btns[i].classList.add('active-group');
+        }
+
+        if (autoWeek) currentWeek = getAutoWeek();
+        updateWeekButtons();
+
+        var d = getTodayDayIndex();
+        if (d >= 0) currentDay = d;
+        var dayBtns = document.querySelectorAll('.day-btn');
+        for (var j = 0; j < dayBtns.length; j++) dayBtns[j].classList.remove('active');
+        if (dayBtns[currentDay]) dayBtns[currentDay].classList.add('active');
+
+        updateSubgroups();
+        renderSchedule();
+
+        document.addEventListener('click', function(e) {
+            var menu = document.getElementById('groupMenu');
+            var burger = document.querySelector('.hamburger');
+            if (menu && menu.classList.contains('open') &&
+                !menu.contains(e.target) && !burger.contains(e.target)) {
+                menu.classList.remove('open');
+            }
+        });
+
+        setInterval(function() {
+            if (autoWeek) {
+                var w = getAutoWeek();
+                if (w !== currentWeek) { currentWeek = w; updateWeekButtons(); }
+            }
+            renderSchedule();
+        }, 60000);
+    })();
+
+        // ==================================================
+    // SERVICE WORKER
+    // ==================================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+    }
+
+    // ==================================================
+    // ДИНАМИЧЕСКИЙ ОТСТУП ПОД НИЖНЮЮ ПАНЕЛЬ
+    // ==================================================
+    function updateBottomPadding() {
+        var nav = document.querySelector('.bottom-nav');
+        if (!nav) return;
+
+        // Панель теперь видна на всех устройствах
+        var navHeight = nav.offsetHeight;
+        var navBottom = parseInt(window.getComputedStyle(nav).bottom) || 16;
+        document.body.style.paddingBottom = (navHeight + navBottom + 40) + 'px';
+    }
+
+    // Запускаем при загрузке
+    updateBottomPadding();
+
+    // Пересчитываем при ресайзе и повороте экрана
+    window.addEventListener('resize', updateBottomPadding);
+    window.addEventListener('orientationchange', updateBottomPadding);
+
+    // Также пересчитываем при смене дня/группы — на случай если контент меняется
+    window.addEventListener('load', updateBottomPadding);
+</script>
+
+</body>
+</html>

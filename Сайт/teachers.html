@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
+    <title>Преподаватели — МПГУ ИФТИС</title>
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        :root {
+            --bg: #f5f6f9;
+            --surface: #ffffff;
+            --surface-alt: #f4f6fa;
+            --text: #0a1e3d;
+            --text-muted: #8b93a7;
+            --accent: #0a1e3d;
+            --gold: #e8c84a;
+            --border: #e8ecf3;
+            --radius: 16px;
+            --shadow: 0 2px 12px rgba(10, 30, 61, 0.05);
+            --shadow-hover: 0 6px 20px rgba(10, 30, 61, 0.1);
+            --transition: 0.25s ease;
+        }
+        body.dark {
+            --bg: #0a0a0f;
+            --surface: #141419;
+            --surface-alt: #1c1c24;
+            --text: #f5f5f7;
+            --text-muted: #7a7a85;
+            --accent: #e8c84a;
+            --gold: #e8c84a;
+            --border: #26262e;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+            --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.7);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 0 0 40px;
+            transition: background var(--transition), color var(--transition);
+            min-height: 100vh;
+        }
+        .container { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+
+        .header {
+            background: var(--surface);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: background var(--transition), border-color var(--transition);
+        }
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--surface-alt);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text);
+            font-size: 20px;
+            text-decoration: none;
+            transition: background var(--transition);
+        }
+        .back-btn:hover { background: var(--border); }
+        .header h1 {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text);
+        }
+        .header h1 span { color: var(--gold); }
+
+        .search-wrap {
+            padding: 16px;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+        .search-box {
+            width: 100%;
+            padding: 14px 20px 14px 48px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            font-size: 15px;
+            background: var(--surface) url('/icons/search.svg') no-repeat 18px center;
+            background-size: 18px;
+            color: var(--text);
+            outline: none;
+            transition: all var(--transition);
+        }
+        body.dark .search-box {
+            background-color: var(--surface);
+        }
+        .search-box:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(10, 30, 61, 0.08);
+        }
+        body.dark .search-box:focus {
+            box-shadow: 0 0 0 3px rgba(232, 200, 74, 0.15);
+        }
+
+        .list { padding: 0 16px 40px; max-width: 640px; margin: 0 auto; }
+
+        .letter-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--accent);
+            padding: 18px 8px 10px;
+            border-bottom: 2px solid var(--gold);
+            margin-bottom: 12px;
+        }
+        body.dark .letter-title { color: var(--gold); }
+
+        .teacher-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: var(--surface);
+            padding: 16px 18px;
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: inherit;
+            box-shadow: var(--shadow);
+            transition: all var(--transition);
+            animation: fadeIn 0.3s ease backwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .teacher-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+        .teacher-card:active { transform: scale(0.99); }
+
+        .teacher-photo {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: var(--surface-alt);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: var(--text-muted);
+            overflow: hidden;
+        }
+        .teacher-photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .teacher-info { flex: 1; min-width: 0; }
+        .teacher-fio {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.3;
+        }
+        .teacher-degree {
+            font-size: 12px;
+            color: var(--gold);
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .teacher-dept {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .teacher-arrow {
+            color: var(--gold);
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .empty-msg {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <a href="/" class="back-btn" aria-label="Назад">←</a>
+    <h1>Преподаватели <span>ИФТИС</span></h1>
+</div>
+
+<div class="search-wrap">
+    <input type="text" class="search-box" id="searchInput"
+           placeholder="Поиск по ФИО или кафедре..."
+           oninput="filterTeachers()">
+</div>
+
+<div class="list" id="teachersList"></div>
+
+<script>
+    // ==================================================
+    // СПИСОК ПРЕПОДАВАТЕЛЕЙ
+    // ==================================================
+    var teachersData = [
+        { fio: 'Бабурова Ольга Валерьевна', dept: 'Кафедра теоретической физики', degree: '', photo: '', url: 'https://mpgu.su/staff/baburova-olga-valerevna/' },
+        { fio: 'Бакшеева Ксения Алексеевна', dept: 'Кафедра общей и экспериментальной физики', degree: '', photo: '', url: 'https://mpgu.su/staff/baksheeva-kseniya-alekseevna/' },
+        { fio: 'Виноградова Наталья Борисовна', dept: 'Кафедра общей и экспериментальной физики', degree: '', photo: '', url: 'https://mpgu.su/staff/vinogradova-natalya-borisovna/' },
+        { fio: 'Гайдученко Игорь Александрович', dept: 'Кафедра физики и технологии', degree: '', photo: '', url: 'https://mpgu.su/staff/gajduchenko-igor-aleksandrovich/' },
+        { fio: 'Гладуш Максим Геннадьевич', dept: 'Кафедра теоретической физики', degree: '', photo: '', url: 'https://mpgu.su/staff/gladush-maksim-gennadevich/' },
+        { fio: 'Казанцева Алла Борисовна', dept: 'Кафедра общей и экспериментальной физики', degree: '', photo: '', url: 'https://mpgu.su/staff/kazanceva-alla-borisovna/' },
+        { fio: 'Леонов Виктор Георгиевич', dept: 'Кафедра информационных технологий', degree: '', photo: '', url: 'https://mpgu.su/staff/leonov-viktor-georgievich/' },
+        { fio: 'Нижников Александр Иванович', dept: 'Кафедра информационных технологий', degree: '', photo: '', url: 'https://mpgu.su/staff/nizhnikov-aleksandr-ivanovich/' },
+        { fio: 'Парфенов Сергей Юрьевич', dept: 'Кафедра информационных технологий', degree: '', photo: '', url: 'https://mpgu.su/staff/parfenov-sergej-yurevich/' },
+        { fio: 'Полякова Ольга Николаевна', dept: 'Кафедра общей и экспериментальной физики', degree: '', photo: '', url: 'https://mpgu.su/staff/polyakova-olga-nikolaevna/' },
+        { fio: 'Рябчун Сергей Александрович', dept: 'Кафедра теоретической физики', degree: '', photo: '', url: 'https://mpgu.su/staff/ryabchun-sergej-aleksandrovich/' },
+        { fio: 'Трифонов Андрей Васильевич', dept: 'Кафедра общей и экспериментальной физики', degree: '', photo: '', url: 'https://mpgu.su/staff/trifonov-andrej-vasilevich/' },
+        { fio: 'Федянин Владимир Вячеславович', dept: 'Кафедра теоретической физики', degree: '', photo: '', url: 'https://mpgu.su/staff/fedyanin-vladimir-vyacheslavovich/' },
+        { fio: 'Хецева Марина Сергеевна', dept: 'Кафедра теоретической физики', degree: '', photo: '', url: 'https://mpgu.su/staff/heceva-marina-sergeevna/' },
+        { fio: 'Чулкова Галина Меркурьевна', dept: 'Кафедра общей и экспериментальной физики', degree: '', photo: '', url: 'https://mpgu.su/staff/chulkova-galina-merkurevna/' },
+        { fio: 'Шапкина Валерия Валерьевна', dept: 'Кафедра информационных технологий', degree: '', photo: '', url: 'https://mpgu.su/staff/shapkina-valeriya-valerevna/' }
+    ];
+
+    function sortBySurname(list) {
+        return list.slice().sort(function(a, b) {
+            return a.fio.localeCompare(b.fio, 'ru');
+        });
+    }
+
+    function renderTeachers(filter) {
+        var container = document.getElementById('teachersList');
+        var sorted = sortBySurname(teachersData);
+
+        if (filter) {
+            var q = filter.toLowerCase().trim();
+            sorted = sorted.filter(function(t) {
+                return t.fio.toLowerCase().indexOf(q) !== -1 ||
+                       (t.dept && t.dept.toLowerCase().indexOf(q) !== -1);
+            });
+        }
+
+        if (sorted.length === 0) {
+            container.innerHTML = '<div class="empty-msg">Ничего не найдено 😕</div>';
+            return;
+        }
+
+        var html = '';
+        var currentLetter = '';
+        var idx = 0;
+
+        for (var i = 0; i < sorted.length; i++) {
+            var t = sorted[i];
+            var firstLetter = t.fio.charAt(0).toUpperCase();
+
+            if (firstLetter !== currentLetter) {
+                if (currentLetter !== '') html += '</div>';
+                html += '<div>';
+                html += '<div class="letter-title">' + firstLetter + '</div>';
+                currentLetter = firstLetter;
+            }
+
+            var deptHtml = t.dept ? '<div class="teacher-dept">' + t.dept + '</div>' : '';
+            var degreeHtml = t.degree ? '<div class="teacher-degree">' + t.degree + '</div>' : '';
+            var photoHtml = t.photo ? '<img src="' + t.photo + '" alt="' + t.fio + '">' : '👤';
+
+            html += '<a class="teacher-card" href="' + t.url + '" target="_blank" rel="noopener" style="animation-delay:' + (idx * 0.03) + 's">' +
+                        '<div class="teacher-photo">' + photoHtml + '</div>' +
+                        '<div class="teacher-info">' +
+                            '<div class="teacher-fio">' + t.fio + '</div>' +
+                            degreeHtml +
+                            deptHtml +
+                        '</div>' +
+                        '<span class="teacher-arrow">↗</span>' +
+                    '</a>';
+            idx++;
+        }
+        html += '</div>';
+
+        container.innerHTML = html;
+    }
+
+    function filterTeachers() {
+        renderTeachers(document.getElementById('searchInput').value);
+    }
+
+    // ==================================================
+    // ТЕМА
+    // ==================================================
+    function initTheme() {
+        var saved = null;
+        try { saved = localStorage.getItem('mpgu_theme'); } catch(e) {}
+        if (saved === 'dark') document.body.classList.add('dark');
+        else if (saved === 'light') document.body.classList.remove('dark');
+        else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.body.classList.add('dark');
+        }
+    }
+
+    initTheme();
+    renderTeachers('');
+</script>
+
+</body>
+</html>
