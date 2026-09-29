@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="theme-color" content="#ffffff">
     <title>МПГУ ИФТИС — Расписание</title>
-    <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
     <style>
         /* ============ ПЕРЕМЕННЫЕ ============ */
         :root {
@@ -454,7 +454,7 @@
             color: #fff; border: none; border-radius: 14px;
             cursor: pointer; width: 100%; text-align: left;
             transition: all var(--transition); font-family: inherit;
-            margin-top: 8px;
+            margin-bottom: 16px;
         }
         .admin-btn:hover { transform: translateX(3px); opacity: 0.95; }
         .admin-btn .admin-icon { font-size: 22px; flex-shrink: 0; width: 32px; text-align: center; }
@@ -575,13 +575,230 @@
         .admin-submit:hover { opacity: 0.9; transform: translateY(-1px); }
         body.dark .admin-submit { background: var(--gold); color: #0a1e3d; }
 
-        .admin-placeholder {
-            text-align: center; padding: 30px 10px;
-            color: var(--text-muted); font-size: 14px;
+        /* ============ ПОЛНОЭКРАННЫЙ РЕДАКТОР ============ */
+        .editor-overlay {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            z-index: 500;
+            display: flex; flex-direction: column;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .editor-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .editor-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 16px;
+            display: flex; align-items: center; gap: 12px;
+            flex-shrink: 0;
+            padding-top: calc(12px + env(safe-area-inset-top));
+        }
+        .editor-back-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--surface-alt); border: none;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; color: var(--text);
+            font-size: 20px; flex-shrink: 0;
+            transition: background var(--transition);
+        }
+        .editor-back-btn:hover { background: var(--border); }
+        .editor-header-title {
+            font-size: 18px; font-weight: 800; color: var(--text);
+            flex: 1;
+        }
+        .editor-save-btn {
+            background: var(--accent); color: #fff;
+            border: none; border-radius: 999px;
+            padding: 10px 20px; font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: all var(--transition);
+            font-family: inherit;
+        }
+        .editor-save-btn:hover { opacity: 0.9; }
+        body.dark .editor-save-btn { background: var(--gold); color: #0a1e3d; }
+
+        .editor-course-tabs {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex; gap: 6px;
+            padding: 10px 16px;
+            overflow-x: auto; scrollbar-width: none;
+            flex-shrink: 0;
+        }
+        .editor-course-tabs::-webkit-scrollbar { display: none; }
+        .editor-course-tab {
+            flex-shrink: 0;
+            background: var(--surface-alt); border: none;
+            padding: 8px 18px; border-radius: 999px;
+            font-size: 13px; font-weight: 600;
+            color: var(--text-muted); cursor: pointer;
+            transition: all var(--transition); font-family: inherit;
+        }
+        .editor-course-tab:hover { color: var(--text); }
+        .editor-course-tab.active {
+            background: var(--accent); color: #fff;
+        }
+        body.dark .editor-course-tab.active { background: var(--gold); color: #0a1e3d; }
+
+        .editor-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        .editor-empty {
+            text-align: center; padding: 60px 20px;
+            color: var(--text-muted); font-size: 15px;
             line-height: 1.6;
         }
-        .admin-placeholder .big-icon {
+        .editor-empty .big-icon {
             font-size: 48px; margin-bottom: 12px; display: block;
+        }
+
+        .editor-group {
+            background: var(--surface);
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        .editor-group-title {
+            font-size: 18px; font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        body.dark .editor-group-title { color: var(--gold); }
+        .editor-group-title .badge {
+            background: var(--gold-soft); color: #8a6d1a;
+            font-size: 11px; font-weight: 700;
+            padding: 3px 10px; border-radius: 999px;
+        }
+        body.dark .editor-group-title .badge {
+            background: rgba(232,200,74,0.15); color: var(--gold);
+        }
+
+        .editor-subgroups {
+            display: grid; gap: 12px;
+            margin-bottom: 16px;
+        }
+        .editor-subgroup {
+            background: var(--surface-alt);
+            border-radius: 14px;
+            padding: 12px;
+            border: 1px solid var(--border);
+        }
+        .editor-subgroup-title {
+            font-size: 13px; font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+
+        .editor-day {
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .editor-day-header {
+            background: var(--surface-alt);
+            padding: 8px 12px;
+            font-size: 13px; font-weight: 700;
+            color: var(--text);
+        }
+        .editor-pair {
+            border-top: 1px solid var(--border);
+            padding: 10px 12px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        .editor-pair:first-child { border-top: none; }
+
+        .editor-pair-num {
+            font-size: 12px; font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .editor-field {
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .editor-field label {
+            font-size: 11px; font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .editor-field input,
+        .editor-field select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            background: var(--surface);
+            color: var(--text);
+            outline: none;
+            transition: border-color var(--transition);
+            font-family: inherit;
+        }
+        .editor-field input:focus,
+        .editor-field select:focus {
+            border-color: var(--accent);
+        }
+        body.dark .editor-field input:focus,
+        body.dark .editor-field select:focus {
+            border-color: var(--gold);
+        }
+
+        .editor-row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        /* Подсказки преподавателей */
+        .teacher-suggest-wrap {
+            position: relative;
+        }
+        .teacher-suggestions {
+            position: absolute;
+            top: 100%; left: 0; right: 0;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            max-height: 200px; overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        body.dark .teacher-suggestions {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        }
+        .teacher-suggestions.open { display: block; }
+        .teacher-suggestion-item {
+            padding: 8px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background var(--transition);
+            border-bottom: 1px solid var(--border);
+        }
+        .teacher-suggestion-item:last-child { border-bottom: none; }
+        .teacher-suggestion-item:hover {
+            background: var(--surface-alt);
+        }
+        .teacher-suggestion-item .fio {
+            font-weight: 600; color: var(--text);
+        }
+        .teacher-suggestion-item .dept {
+            font-size: 11px; color: var(--text-muted); margin-top: 2px;
+        }
+
+        /* Адаптив для редактора */
+        @media (min-width: 900px) {
+            .editor-subgroups {
+                grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            }
         }
 
         /* ============ TOAST ============ */
@@ -593,14 +810,13 @@
             font-size: 14px; font-weight: 600;
             box-shadow: 0 8px 24px rgba(0,0,0,0.2);
             opacity: 0; pointer-events: none;
-            transition: all 0.3s ease; z-index: 500;
+            transition: all 0.3s ease; z-index: 600;
         }
         body.dark .toast { background: var(--gold); color: #0a1e3d; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
         /* ============ АДАПТИВ ============ */
         @media (min-width: 720px) {
-            /* Нижняя панель теперь видна на всех устройствах */
             body { padding-bottom: 120px; }
             .scroll-top { bottom: 110px; }
             .dropdown { top: 90px; }
@@ -628,7 +844,7 @@
     <div class="container">
         <div class="header-top">
             <a href="https://mpgu.su/homempgu/" target="_blank" rel="noopener">
-                <img src="/icons/logo.svg" alt="МПГУ" class="logo" onerror="this.style.display='none'">
+                <img src="./icons/logo.svg" alt="МПГУ" class="logo" onerror="this.style.display='none'">
             </a>
             <div class="brand-divider"></div>
             <div class="brand-text">
@@ -695,7 +911,7 @@
                 <button id="weekEven" onclick="switchWeek('even')">Четная</button>
             </div>
             <button class="auto-btn active-auto" id="weekAuto" onclick="toggleAutoWeek()">
-                <img src="/icons/refresh.svg" alt="" onerror="this.outerHTML='🔄'">
+                <img src="./icons/refresh.svg" alt="" onerror="this.outerHTML='🔄'">
                 <span>Авто</span>
             </button>
         </div>
@@ -708,7 +924,7 @@
             <button class="day-btn" id="day4" onclick="switchDay(4)">ПТ</button>
             <button class="day-btn" id="day5" onclick="switchDay(5)">СБ</button>
             <button class="today-btn" onclick="goToday()">
-                <img src="/icons/today.svg" alt="" onerror="this.outerHTML='📅'">
+                <img src="./icons/today.svg" alt="" onerror="this.outerHTML='📅'">
                 <span>Сегодня</span>
             </button>
         </div>
@@ -729,19 +945,19 @@
 
 <nav class="bottom-nav">
     <button class="active" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-        <img src="/icons/calendar.svg" alt="" onerror="this.outerHTML='📅'">
+        <img src="./icons/calendar.svg" alt="" onerror="this.outerHTML='📅'">
         <span>Расписание</span>
     </button>
     <button onclick="window.open('https://el.mpgu.su/my/', '_blank')">
-        <img src="/icons/infoda.svg" alt="" onerror="this.outerHTML='📋'">
+        <img src="./icons/infoda.svg" alt="" onerror="this.outerHTML='📋'">
         <span>ИнфоДа</span>
     </button>
-    <a href="/teachers.html">
-        <img src="/icons/man.svg" alt="" onerror="this.outerHTML='👤'">
+    <a href="./teachers.html">
+        <img src="./icons/man.svg" alt="" onerror="this.outerHTML='👤'">
         <span>Преподаватели</span>
     </a>
     <button onclick="openSettings()">
-        <img src="/icons/settings.svg" alt="" onerror="this.outerHTML='⚙️'">
+        <img src="./icons/settings.svg" alt="" onerror="this.outerHTML='⚙️'">
         <span>Настройки</span>
     </button>
 </nav>
@@ -779,14 +995,14 @@
         <div class="settings-section">
             <div class="settings-label">Связь</div>
             <a class="settings-link support-link" href="https://t.me/milanway" target="_blank" rel="noopener">
-                <img src="/icons/helper.svg" alt="" class="settings-link-icon-img" onerror="this.outerHTML='💬'">
+                <img src="./icons/helper.svg" alt="" class="settings-link-icon-img" onerror="this.outerHTML='💬'">
                 <div class="settings-link-text">
                     <div class="settings-link-title">Техподдержка</div>
                     <div class="settings-link-sub">@milanway · Telegram</div>
                 </div>
                 <span class="settings-arrow">↗</span>
             </a>
-            <a class="settings-link" href="/teachers.html">
+            <a class="settings-link" href="./teachers.html">
                 <span class="settings-link-icon">👨‍🏫</span>
                 <div class="settings-link-text">
                     <div class="settings-link-title">Преподаватели</div>
@@ -832,23 +1048,38 @@
             <div class="admin-modal-title" id="adminModalTitle">Вход для администратора</div>
         </div>
 
-        <!-- Форма входа -->
         <div id="adminLoginForm">
             <label class="admin-field-label" for="adminPassword">Пароль</label>
             <input type="password" class="admin-input" id="adminPassword"
                    placeholder="Введите пароль" autocomplete="off"
                    onkeydown="if(event.key==='Enter') tryAdminLogin()">
-            <div class="admin-error" id="adminError">Неправильный пароль</div>
+            <div class="admin-error" id="adminError">Вы не администратор</div>
             <button class="admin-submit" onclick="tryAdminLogin()">Войти</button>
         </div>
+    </div>
+</div>
 
-        <!-- Раздел редактирования (заглушка) -->
-        <div id="adminEditPanel" style="display:none;">
-            <div class="admin-placeholder">
-                <span class="big-icon">🛠️</span>
-                Раздел редактирования<br>
-                <small>будет добавлен позже</small>
-            </div>
+<!-- ============ ПОЛНОЭКРАННЫЙ РЕДАКТОР ============ -->
+<div class="editor-overlay" id="editorOverlay">
+    <div class="editor-header">
+        <button class="editor-back-btn" onclick="closeEditor()" aria-label="Назад">←</button>
+        <div class="editor-header-title">Редактирование расписания</div>
+        <button class="editor-save-btn" onclick="saveEditorData()">Сохранить</button>
+    </div>
+
+    <div class="editor-course-tabs" id="editorCourseTabs">
+        <button class="editor-course-tab active" data-course="1" onclick="selectEditorCourse('1')">1 курс</button>
+        <button class="editor-course-tab" data-course="2" onclick="selectEditorCourse('2')">2 курс</button>
+        <button class="editor-course-tab" data-course="3" onclick="selectEditorCourse('3')">3 курс</button>
+        <button class="editor-course-tab" data-course="4" onclick="selectEditorCourse('4')">4 курс</button>
+        <button class="editor-course-tab" data-course="5" onclick="selectEditorCourse('5')">5 курс</button>
+        <button class="editor-course-tab" data-course="M" onclick="selectEditorCourse('M')">Магистратура</button>
+    </div>
+
+    <div class="editor-body" id="editorBody">
+        <div class="editor-empty">
+            <span class="big-icon">📚</span>
+            Выберите курс, чтобы начать редактирование
         </div>
     </div>
 </div>
@@ -856,6 +1087,18 @@
 <div class="toast" id="toast"></div>
 
 <script>
+    // ==================================================
+    // НАСТРОЙКИ GITHUB
+    // ==================================================
+    var GITHUB_OWNER = 'milanway';
+    var GITHUB_REPO  = 'iftis-schedule';
+    var GITHUB_BRANCH = 'main';
+    var GITHUB_PATH = 'data/schedule.json';
+    var GITHUB_TOKEN = 'Твой токен';
+
+    var ADMIN_PASSWORD = 'admin303';
+    var isAdmin = false;
+
     // ==================================================
     // ДАННЫЕ
     // ==================================================
@@ -865,9 +1108,6 @@
     var currentSubgroup = '1';
     var currentGroup = '303';
     var autoWeek = true;
-
-    var ADMIN_PASSWORD = 'admin303';
-    var isAdmin = false;
 
     var timeSlots = [
         { num: 1, time: '9:15 – 10:50' },
@@ -887,6 +1127,105 @@
         { num: 2, time: '13:15 – 14:50' },
         { num: 3, time: '15:00 – 16:35' },
         { num: 4, time: '16:45 – 18:20' }
+    ];
+
+    // Времена пар для редактора
+    var TIMES_IFTIS = [
+        '9:15 – 10:50',
+        '11:00 – 12:35',
+        '13:15 – 14:50',
+        '15:00 – 16:35',
+        '16:45 – 18:20',
+        '18:30 – 20:05'
+    ];
+    var TIMES_KGF = [
+        '9:00 – 10:30',
+        '10:40 – 12:10',
+        '12:40 – 14:10',
+        '14:20 – 15:50',
+        '16:00 – 17:30',
+        '17:40 – 19:10'
+    ];
+    var ROOMS = ['1-64','101','102','103','104','201','202','203','301','302','303','401','402','403','501','502','503','601','602','603','604','605','606','607','608'];
+
+    // База преподавателей (для умного поиска)
+    var teachersData = [
+        { fio: 'Бабурова Ольга Валерьевна', dept: 'Кафедра теоретической физики' },
+        { fio: 'Бакшеева Ксения Алексеевна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Виноградова Наталья Борисовна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Гайдученко Игорь Александрович', dept: 'Кафедра физики и технологии' },
+        { fio: 'Гладуш Максим Геннадьевич', dept: 'Кафедра теоретической физики' },
+        { fio: 'Казанцева Алла Борисовна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Леонов Виктор Георгиевич', dept: 'Кафедра информационных технологий' },
+        { fio: 'Нижников Александр Иванович', dept: 'Кафедра информационных технологий' },
+        { fio: 'Парфенов Сергей Юрьевич', dept: 'Кафедра информационных технологий' },
+        { fio: 'Полякова Ольга Николаевна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Рябчун Сергей Александрович', dept: 'Кафедра теоретической физики' },
+        { fio: 'Трифонов Андрей Васильевич', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Федянин Владимир Вячеславович', dept: 'Кафедра теоретической физики' },
+        { fio: 'Хецева Марина Сергеевна', dept: 'Кафедра теоретической физики' },
+        { fio: 'Чулкова Галина Меркурьевна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Шапкина Валерия Валерьевна', dept: 'Кафедра информационных технологий' },
+        { fio: 'Виноградова Елена Георгиевна', dept: 'Кафедра истории России' },
+        { fio: 'Филина Елена Ивановна', dept: 'Кафедра истории России' },
+        { fio: 'Бакун Наталия Владимировна', dept: 'Кафедра иностранных языков' },
+        { fio: 'Щедрина Мария Георгиевна', dept: 'Кафедра иностранных языков' },
+        { fio: 'Лозовенко Сергей Владимирович', dept: 'Кафедра физики и технологии' },
+        { fio: 'Мишланова Олеся Михайловна', dept: 'Кафедра анатомии и физиологии' },
+        { fio: 'Вахтомина Елена Афанасьевна', dept: 'Кафедра технологии' },
+        { fio: 'Умнова Светлана Викторовна', dept: 'Кафедра математики' },
+        { fio: 'Борунова Елизавета Борисовна', dept: 'Кафедра иностранных языков' },
+        { fio: 'Матвеев Евгений Михайлович', dept: 'Кафедра математики' },
+        { fio: 'Елезов Михаил Сергеевич', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Князева Ольга Юрьевна', dept: 'Кафедра русского языка' },
+        { fio: 'Батищева Юлия Андреевна', dept: 'Кафедра математики' },
+        { fio: 'Гусин Кирилл Феликсович', dept: 'Кафедра информационных технологий' },
+        { fio: 'Ямалетдинова Флера Миназетдиновна', dept: 'Кафедра педагогики' },
+        { fio: 'Теплякова Ксения Олеговна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Окунев Олег Валерьевич', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Макленкова Светлана Юрьевна', dept: 'Кафедра технологии' },
+        { fio: 'Киселева Татьяна Борисовна', dept: 'Кафедра психологии' },
+        { fio: 'Бирюков Сергей Владимирович', dept: 'Кафедра физики и технологии' },
+        { fio: 'Демина Вера Викторовна', dept: 'Кафедра экономики' },
+        { fio: 'Сапего Ирина Павловна', dept: 'Кафедра технологии' },
+        { fio: 'Коротаева Евгения Ароновна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Хребтова Светлана Борисовна', dept: 'Кафедра химии' },
+        { fio: 'Шляхова Марина Алексеевна', dept: 'Кафедра химии' },
+        { fio: 'Поликашина Ольга Владимировна', dept: 'Кафедра права' },
+        { fio: 'Солдатенкова Мария Дмитриевна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Степанов Максим Евгеньевич', dept: 'Кафедра химии' },
+        { fio: 'Беликов Иван Игоревич', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Колбатова Анна Игоревна', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Егорова Софья Алексеевна', dept: 'Кафедра педагогики' },
+        { fio: 'Федяева Елена Михайловна', dept: 'Кафедра информационных технологий' },
+        { fio: 'Селезнев Виталий Александрович', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Саид Мадлен Мохамедовна', dept: 'Кафедра информационных технологий' },
+        { fio: 'Чигирев Александр Ростиславович', dept: 'Кафедра теоретической физики' },
+        { fio: 'Пушкарева Юлия Александровна', dept: 'Кафедра физики и технологии' },
+        { fio: 'Дульцев Антон Игоревич', dept: 'Кафедра информационных технологий' },
+        { fio: 'Селиверстов Сергей Валерьевич', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Якушева Татьяна Геннадьевна', dept: 'Кафедра технологии' },
+        { fio: 'Латышев Александр Викторович', dept: 'Кафедра технологии' },
+        { fio: 'Лобанов Юрий Валерьевич', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Степанов Сергей Васильевич', dept: 'Кафедра физики и технологии' },
+        { fio: 'Шураков Александр Сергеевич', dept: 'Кафедра информационных технологий' },
+        { fio: 'Косино Ольга Алексеевна', dept: 'Кафедра информационных технологий' },
+        { fio: 'Горбунова Мария Владимировна', dept: 'Кафедра русского языка' },
+        { fio: 'Гоголданова Кермен Вячеславовна', dept: 'Кафедра информационных технологий' },
+        { fio: 'Седельникова Ирина Владимировна', dept: 'Кафедра физики и технологии' },
+        { fio: 'Абдулгалимов Грамудин Латифович', dept: 'Кафедра информационных технологий' },
+        { fio: 'Исакова Галина Сергеевна', dept: 'Кафедра технологии' },
+        { fio: 'Максимкина Ирина Викторовна', dept: 'Кафедра технологии' },
+        { fio: 'Одинцова Наталия Игоревна', dept: 'Кафедра физики и технологии' },
+        { fio: 'Рябов Борис Алексеевич', dept: 'Кафедра общей и экспериментальной физики' },
+        { fio: 'Залыгин Антон Владленович', dept: 'Кафедра теоретической физики' },
+        { fio: 'Гольцман Григорий Наумович', dept: 'Кафедра теоретической физики' },
+        { fio: 'Стинская Ксения Брониславовна', dept: 'Кафедра теоретической физики' },
+        { fio: 'Винник Михаил Анатольевич', dept: 'Кафедра теоретической физики' },
+        { fio: 'Мирзоев Махмашариф Сайфович', dept: 'Кафедра информационных технологий' },
+        { fio: 'Харичева Дина Леонидовна', dept: 'Кафедра информационных технологий' },
+        { fio: 'Королев Максим Юрьевич', dept: 'Кафедра теоретической физики' },
+        { fio: 'Разумовская Ирина Васильевна', dept: 'Кафедра теоретической физики' }
     ];
 
     // ======= РАСПИСАНИЕ ДЛЯ ВСЕХ ГРУПП =======
@@ -1501,7 +1840,6 @@
     };
 
     // ---- МАГИСТРАТУРА ----
-    // М101
     scheduleData['М101'] = {
         type: 'master',
         subgroups: ['1'],
@@ -1527,7 +1865,6 @@
         }
     };
 
-    // М102
     scheduleData['М102'] = {
         type: 'master',
         subgroups: ['1'],
@@ -1551,7 +1888,6 @@
         }
     };
 
-    // М201
     scheduleData['М201'] = {
         type: 'master',
         subgroups: ['1'],
@@ -1651,13 +1987,13 @@
                     displayName = displayName.replace('(' + dateMatch[1] + ')', '').replace(/,\s*$/, '').trim();
                 }
 
-                var roomHtml = room ? '<div class="pair-meta-row"><img src="/icons/pin.svg" alt="" onerror="this.outerHTML=\'📍\'"><span class="room-pill">' + room + '</span></div>' : '';
-                var teacherHtml = teacher ? '<div class="pair-meta-row"><img src="/icons/man.svg" alt="" onerror="this.outerHTML=\'👤\'"><span>' + teacher + '</span></div>' : '';
+                var roomHtml = room ? '<div class="pair-meta-row"><img src="./icons/pin.svg" alt="" onerror="this.outerHTML=\'📍\'"><span class="room-pill">' + room + '</span></div>' : '';
+                var teacherHtml = teacher ? '<div class="pair-meta-row"><img src="./icons/man.svg" alt="" onerror="this.outerHTML=\'👤\'"><span>' + teacher + '</span></div>' : '';
 
                 html += '<div class="' + cardClass + '" style="animation-delay:' + (i * 0.04) + 's">' +
                     nowBadge +
                     '<div class="pair-head">' +
-                        '<img src="/icons/hat.svg" alt="" onerror="this.outerHTML=\'🎓\'">' +
+                        '<img src="./icons/hat.svg" alt="" onerror="this.outerHTML=\'🎓\'">' +
                         '<span class="time">' + slot.time + '</span>' +
                         '<button class="pair-menu-btn" onclick="togglePairMenu(this)" aria-label="Действия">⋮</button>' +
                     '</div>' +
@@ -1676,7 +2012,7 @@
             } else {
                 html += '<div class="pair-card empty" style="animation-delay:' + (i * 0.04) + 's">' +
                     '<div class="pair-head">' +
-                        '<img src="/icons/window.svg" alt="" onerror="this.outerHTML=\'📅\'">' +
+                        '<img src="./icons/window.svg" alt="" onerror="this.outerHTML=\'📅\'">' +
                         '<span class="time">' + slot.time + '</span>' +
                     '</div>' +
                     '<div class="pair-subject">ОКНО</div>' +
@@ -2029,7 +2365,6 @@
     // АДМИН
     // ==================================================
     function openAdminLogin() {
-        // Сбрасываем форму в исходное состояние
         document.getElementById('adminLoginForm').style.display = 'block';
         document.getElementById('adminEditPanel').style.display = 'none';
         document.getElementById('adminModalTitle').textContent = 'Вход для администратора';
@@ -2048,7 +2383,6 @@
     function closeAdminModal(event) {
         if (event && event.target !== event.currentTarget) return;
         document.getElementById('adminModal').classList.remove('open');
-        // Возвращаем overflow только если модалка настроек тоже закрыта
         var settingsModal = document.getElementById('settingsModal');
         if (!settingsModal.classList.contains('open')) {
             document.body.style.overflow = '';
@@ -2063,11 +2397,11 @@
         if (value === ADMIN_PASSWORD) {
             isAdmin = true;
             error.classList.remove('show');
-            // Показываем раздел редактирования (заглушка)
-            document.getElementById('adminLoginForm').style.display = 'none';
-            document.getElementById('adminEditPanel').style.display = 'block';
-            document.getElementById('adminModalTitle').textContent = 'Редактирование';
-            showToast('Вы вошли как администратор');
+            document.getElementById('adminModal').classList.remove('open');
+            document.getElementById('settingsModal').classList.remove('open');
+            document.body.style.overflow = 'hidden';
+            openEditor();
+            showToast('Вы вошли как администратор 🔓');
         } else {
             error.classList.add('show');
             input.value = '';
@@ -2076,10 +2410,333 @@
     }
 
     // ==================================================
+    // ПОЛНОЭКРАННЫЙ РЕДАКТОР
+    // ==================================================
+    var currentEditorCourse = '1';
+
+    function openEditor() {
+        document.getElementById('editorOverlay').classList.add('open');
+        document.body.style.overflow = 'hidden';
+        selectEditorCourse(currentEditorCourse);
+    }
+
+    function closeEditor() {
+        document.getElementById('editorOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function selectEditorCourse(course) {
+        currentEditorCourse = course;
+        var tabs = document.querySelectorAll('.editor-course-tab');
+        for (var i = 0; i < tabs.length; i++) {
+            tabs[i].classList.remove('active');
+            if (tabs[i].getAttribute('data-course') === course) {
+                tabs[i].classList.add('active');
+            }
+        }
+        renderEditor();
+    }
+
+    function getGroupsForCourse(course) {
+        var result = [];
+        for (var key in scheduleData) {
+            if (!scheduleData.hasOwnProperty(key)) continue;
+            if (course === '1' && key.charAt(0) === '1') result.push(key);
+            else if (course === '2' && key.charAt(0) === '2') result.push(key);
+            else if (course === '3' && key.charAt(0) === '3') result.push(key);
+            else if (course === '4' && key.charAt(0) === '4') result.push(key);
+            else if (course === '5' && key.charAt(0) === '5') result.push(key);
+            else if (course === 'M' && key.charAt(0) === 'М') result.push(key);
+        }
+        result.sort();
+        return result;
+    }
+
+    function renderEditor() {
+        var body = document.getElementById('editorBody');
+        var groups = getGroupsForCourse(currentEditorCourse);
+
+        if (groups.length === 0) {
+            body.innerHTML = '<div class="editor-empty"><span class="big-icon">📭</span>Нет групп для этого курса</div>';
+            return;
+        }
+
+        var html = '';
+        for (var g = 0; g < groups.length; g++) {
+            var groupKey = groups[g];
+            var groupData = scheduleData[groupKey];
+            var subgroups = groupData.subgroups;
+
+            html += '<div class="editor-group">';
+            html += '<div class="editor-group-title">' + groupKey + ' группа <span class="badge">' + subgroups.length + ' подгр.</span></div>';
+
+            html += '<div class="editor-subgroups">';
+            for (var s = 0; s < subgroups.length; s++) {
+                var sg = subgroups[s];
+                html += '<div class="editor-subgroup">';
+                html += '<div class="editor-subgroup-title">' + sg + ' подгруппа</div>';
+
+                for (var d = 0; d < 6; d++) {
+                    html += '<div class="editor-day">';
+                    html += '<div class="editor-day-header">' + dayNames[d] + '</div>';
+
+                    for (var p = 1; p <= 6; p++) {
+                        var pair = getPairForEdit(groupKey, 'odd', sg, d, p);
+                        html += renderEditorPair(groupKey, 'odd', sg, d, p, pair);
+                    }
+
+                    html += '</div>';
+                }
+
+                html += '</div>';
+            }
+            html += '</div>';
+            html += '</div>';
+        }
+
+        body.innerHTML = html;
+    }
+
+    function getPairForEdit(groupKey, week, sg, day, pairNum) {
+        var groupData = scheduleData[groupKey];
+        if (!groupData) return null;
+        var weekData = groupData[week];
+        if (!weekData) return null;
+        var sgData = weekData[sg];
+        if (!sgData) return null;
+        var dayData = sgData[day];
+        if (!dayData) return null;
+        return dayData[pairNum] || null;
+    }
+
+    function renderEditorPair(groupKey, week, sg, day, pairNum, pair) {
+        var subject = pair ? (pair.subject || '') : '';
+        var teacher = pair ? (pair.teacher || '') : '';
+        var room = pair ? (pair.room || '') : '';
+        var timeVariant = pair && pair.room === 'КГФ' ? 'kgf' : 'iftis';
+
+        var id = 'p_' + groupKey + '_' + week + '_' + sg + '_' + day + '_' + pairNum;
+
+        var html = '<div class="editor-pair">';
+        html += '<div class="editor-pair-num">' + pairNum + ' пара</div>';
+
+        html += '<div class="editor-field">';
+        html += '<label>Предмет</label>';
+        html += '<input type="text" id="' + id + '_subj" value="' + escapeHtml(subject) + '" placeholder="Название предмета" oninput="updatePairField(\'' + groupKey + '\',\'' + week + '\',\'' + sg + '\',' + day + ',' + pairNum + ',\'subject\',this.value)">';
+        html += '</div>';
+
+        html += '<div class="editor-row-2">';
+
+        html += '<div class="editor-field">';
+        html += '<label>Время</label>';
+        html += '<select onchange="onTimeChange(\'' + groupKey + '\',\'' + week + '\',\'' + sg + '\',' + day + ',' + pairNum + ',this.value)">';
+        html += '<option value="iftis"' + (timeVariant === 'iftis' ? ' selected' : '') + '>ИФТИС (' + TIMES_IFTIS[pairNum - 1] + ')</option>';
+        html += '<option value="kgf"' + (timeVariant === 'kgf' ? ' selected' : '') + '>КГФ (' + TIMES_KGF[pairNum - 1] + ')</option>';
+        html += '</select>';
+        html += '</div>';
+
+        html += '<div class="editor-field">';
+        html += '<label>Аудитория</label>';
+        html += '<input type="text" list="roomsList" id="' + id + '_room" value="' + escapeHtml(room) + '" placeholder="Номер" oninput="updatePairField(\'' + groupKey + '\',\'' + week + '\',\'' + sg + '\',' + day + ',' + pairNum + ',\'room\',this.value)">';
+        html += '</div>';
+
+        html += '</div>';
+
+        html += '<div class="editor-field">';
+        html += '<label>Преподаватель</label>';
+        html += '<div class="teacher-suggest-wrap">';
+        html += '<input type="text" id="' + id + '_teacher" value="' + escapeHtml(teacher) + '" placeholder="ФИО" autocomplete="off" oninput="onTeacherInput(this, \'' + groupKey + '\',\'' + week + '\',\'' + sg + '\',' + day + ',' + pairNum + ')" onfocus="onTeacherInput(this, \'' + groupKey + '\',\'' + week + '\',\'' + sg + '\',' + day + ',' + pairNum + ')" onblur="setTimeout(function(){document.getElementById(\'' + id + '_sugg\').classList.remove(\'open\')}, 200)">';
+        html += '<div class="teacher-suggestions" id="' + id + '_sugg"></div>';
+        html += '</div>';
+        html += '</div>';
+
+        html += '</div>';
+
+        return html;
+    }
+
+    function escapeHtml(s) {
+        return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function updatePairField(groupKey, week, sg, day, pairNum, field, value) {
+        ensurePairExists(groupKey, week, sg, day, pairNum);
+        scheduleData[groupKey][week][sg][day][pairNum][field] = value;
+    }
+
+    function onTimeChange(groupKey, week, sg, day, pairNum, variant) {
+        ensurePairExists(groupKey, week, sg, day, pairNum);
+        var pair = scheduleData[groupKey][week][sg][day][pairNum];
+        if (variant === 'kgf') {
+            pair.room = pair.room || 'КГФ';
+        }
+        pair.timeVariant = variant;
+    }
+
+    function onTeacherInput(input, groupKey, week, sg, day, pairNum) {
+        var query = input.value.toLowerCase().trim();
+        var suggId = input.id + '_sugg';
+        var suggBox = document.getElementById(suggId);
+        if (!suggBox) return;
+
+        if (query.length < 1) {
+            suggBox.classList.remove('open');
+            return;
+        }
+
+        var matches = [];
+        for (var i = 0; i < teachersData.length; i++) {
+            if (teachersData[i].fio.toLowerCase().indexOf(query) !== -1) {
+                matches.push(teachersData[i]);
+            }
+        }
+
+        if (matches.length === 0) {
+            suggBox.classList.remove('open');
+            return;
+        }
+
+        var html = '';
+        for (var j = 0; j < Math.min(matches.length, 8); j++) {
+            var m = matches[j];
+            html += '<div class="teacher-suggestion-item" onmousedown="selectTeacher(\'' + input.id + '\',\'' + escapeAttr(m.fio) + '\',\'' + groupKey + '\',\'' + week + '\',\'' + sg + '\',' + day + ',' + pairNum + ')">' +
+                '<div class="fio">' + m.fio + '</div>' +
+                '<div class="dept">' + (m.dept || '') + '</div>' +
+            '</div>';
+        }
+        suggBox.innerHTML = html;
+        suggBox.classList.add('open');
+    }
+
+    function selectTeacher(inputId, fio, groupKey, week, sg, day, pairNum) {
+        var input = document.getElementById(inputId);
+        if (input) input.value = fio;
+        var suggBox = document.getElementById(inputId + '_sugg');
+        if (suggBox) suggBox.classList.remove('open');
+        updatePairField(groupKey, week, sg, day, pairNum, 'teacher', fio);
+    }
+
+    function ensurePairExists(groupKey, week, sg, day, pairNum) {
+        if (!scheduleData[groupKey]) scheduleData[groupKey] = {};
+        if (!scheduleData[groupKey][week]) scheduleData[groupKey][week] = {};
+        if (!scheduleData[groupKey][week][sg]) scheduleData[groupKey][week][sg] = {};
+        if (!scheduleData[groupKey][week][sg][day]) scheduleData[groupKey][week][sg][day] = {};
+        if (!scheduleData[groupKey][week][sg][day][pairNum]) {
+            scheduleData[groupKey][week][sg][day][pairNum] = { subject: '', teacher: '', room: '' };
+        }
+    }
+
+    // ==================================================
+    // СОХРАНЕНИЕ В GITHUB
+    // ==================================================
+    async function saveEditorData() {
+        if (!isAdmin) {
+            showToast('Нет прав для сохранения ❌');
+            return;
+        }
+
+        showToast('Сохраняю на GitHub…');
+
+        try {
+            var apiUrl = 'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO +
+                '/contents/' + GITHUB_PATH + '?ref=' + GITHUB_BRANCH;
+
+            var getResp = await fetch(apiUrl, {
+                headers: {
+                    'Authorization': 'Bearer ' + GITHUB_TOKEN,
+                    'Accept': 'application/vnd.github+json'
+                }
+            });
+
+            var sha = null;
+            if (getResp.ok) {
+                var fileData = await getResp.json();
+                sha = fileData.sha;
+            } else if (getResp.status !== 404) {
+                var errData = await getResp.json().catch(function() { return {}; });
+                throw new Error('GitHub: ' + (errData.message || getResp.status));
+            }
+
+            var jsonStr = JSON.stringify(scheduleData, null, 2);
+            var base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+
+            var body = {
+                message: 'Обновление расписания ' + new Date().toLocaleString('ru-RU'),
+                content: base64,
+                branch: GITHUB_BRANCH
+            };
+            if (sha) body.sha = sha;
+
+            var putResp = await fetch(
+                'https://api.github.com/repos/' + GITHUB_OWNER + '/' + GITHUB_REPO +
+                '/contents/' + GITHUB_PATH,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': 'Bearer ' + GITHUB_TOKEN,
+                        'Accept': 'application/vnd.github+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                }
+            );
+
+            if (!putResp.ok) {
+                var putErr = await putResp.json().catch(function() { return {}; });
+                throw new Error('GitHub: ' + (putErr.message || putResp.status));
+            }
+
+            showToast('Сохранено на GitHub ✅ Обновление через 1–2 мин');
+        } catch (err) {
+            console.error('Ошибка сохранения:', err);
+            try {
+                localStorage.setItem('mpgu_schedule_edit', JSON.stringify(scheduleData));
+            } catch(e) {}
+            showToast('Ошибка: ' + err.message + ' ❌ (сохранено локально)');
+        }
+    }
+
+    // ==================================================
+    // ЗАГРУЗКА ИЗ GITHUB PAGES
+    // ==================================================
+    async function loadEditorData() {
+        try {
+            var url = 'https://' + GITHUB_OWNER + '.github.io/' + GITHUB_REPO + '/' + GITHUB_PATH;
+
+            var resp = await fetch(url + '?t=' + Date.now());
+            if (resp.ok) {
+                var data = await resp.json();
+                if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+                    for (var g in data) {
+                        if (data.hasOwnProperty(g)) {
+                            scheduleData[g] = data[g];
+                        }
+                    }
+                    console.log('Расписание загружено с GitHub Pages');
+                    return;
+                }
+            }
+        } catch (err) {
+            console.warn('Не удалось загрузить с GitHub Pages:', err);
+        }
+
+        try {
+            var saved = localStorage.getItem('mpgu_schedule_edit');
+            if (saved) {
+                var parsed = JSON.parse(saved);
+                for (var g in parsed) {
+                    if (parsed.hasOwnProperty(g)) scheduleData[g] = parsed[g];
+                }
+            }
+        } catch(e) {}
+    }
+
+    // ==================================================
     // ИНИЦИАЛИЗАЦИЯ
     // ==================================================
-    (function init() {
+    (async function init() {
         initTheme();
+        await loadEditorData();
 
         try {
             var saved = localStorage.getItem('mpgu_group');
@@ -2126,12 +2783,12 @@
         }, 60000);
     })();
 
-        // ==================================================
+    // ==================================================
     // SERVICE WORKER
     // ==================================================
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js').catch(function() {});
+            navigator.serviceWorker.register('./sw.js').catch(function() {});
         });
     }
 
@@ -2142,22 +2799,44 @@
         var nav = document.querySelector('.bottom-nav');
         if (!nav) return;
 
-        // Панель теперь видна на всех устройствах
         var navHeight = nav.offsetHeight;
         var navBottom = parseInt(window.getComputedStyle(nav).bottom) || 16;
         document.body.style.paddingBottom = (navHeight + navBottom + 40) + 'px';
     }
 
-    // Запускаем при загрузке
     updateBottomPadding();
-
-    // Пересчитываем при ресайзе и повороте экрана
     window.addEventListener('resize', updateBottomPadding);
     window.addEventListener('orientationchange', updateBottomPadding);
-
-    // Также пересчитываем при смене дня/группы — на случай если контент меняется
     window.addEventListener('load', updateBottomPadding);
 </script>
+
+<datalist id="roomsList">
+    <option value="1-64"></option>
+    <option value="101"></option>
+    <option value="102"></option>
+    <option value="103"></option>
+    <option value="104"></option>
+    <option value="201"></option>
+    <option value="202"></option>
+    <option value="203"></option>
+    <option value="301"></option>
+    <option value="302"></option>
+    <option value="303"></option>
+    <option value="401"></option>
+    <option value="402"></option>
+    <option value="403"></option>
+    <option value="501"></option>
+    <option value="502"></option>
+    <option value="503"></option>
+    <option value="601"></option>
+    <option value="602"></option>
+    <option value="603"></option>
+    <option value="604"></option>
+    <option value="605"></option>
+    <option value="606"></option>
+    <option value="607"></option>
+    <option value="608"></option>
+</datalist>
 
 </body>
 </html>
